@@ -165,15 +165,22 @@ input,textarea,select{font-family:inherit;font-size:16px}
 </div>
 <div id="login">
   <div class="lwm"><span class="o">COMPLETE CARE</span> MASONRY</div>
-  <div class="ltag">Crew app · sign in to start your day</div>
-  <div id="loginlist"></div>
-  <p class="note">Tap your name to sign in.<br>(Real version: each person gets a private login + a company join code.)</p>
+  <div class="ltag">Crew app · sign in with your phone</div>
+  <div style="max-width:360px;margin:8px auto 0;width:100%">
+    <div class="field"><label style="color:#9aa0a6">Phone number</label>
+      <input id="phoneIn" type="tel" inputmode="tel" autocomplete="tel" placeholder="(860) 555-0000" style="background:#151515;border:1.5px solid #2a2a2a;color:#fff" onkeydown="if(event.key==='Enter')doPhoneLogin()">
+    </div>
+    <button class="btn wave" onclick="doPhoneLogin()">Continue ›</button>
+    <p id="loginerr" style="color:#df4b3a;font-size:13px;text-align:center;margin-top:10px;display:none"></p>
+    <div id="demohint"></div>
+  </div>
+  <p class="note">Real version texts you a 6-digit code, so only you can sign in.<br>Admins and employees get different apps automatically.</p>
 </div>
 <div class="sheet" id="sheet" onclick="if(event.target===this)closeSheet()"><div class="sheetcard" id="sheetcard"></div></div>
 
 <script>
 /* ============ STATE ============ */
-const LS='ccm_state_v1';
+const LS='ccm_state_v2';
 const uid=()=>Math.random().toString(36).slice(2,9);
 const now=()=>Date.now();
 const fmtT=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
@@ -182,10 +189,10 @@ const initials=n=>n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
 
 function seed(){
  const crew=[
-  {id:'u1',name:'Russ',role:'Owner'},
-  {id:'u2',name:'Mike D',role:'Site Manager'},
-  {id:'u3',name:'Carlos',role:'Mason'},
-  {id:'u4',name:'Tyler',role:'Laborer'},
+  {id:'u1',name:'Russ',role:'Owner',phone:'(860) 555-0100'},
+  {id:'u2',name:'Mike D',role:'Site Manager',phone:'(860) 555-0102'},
+  {id:'u3',name:'Carlos',role:'Mason',phone:'(860) 555-0103'},
+  {id:'u4',name:'Tyler',role:'Laborer',phone:'(860) 555-0104'},
  ];
  const job={id:uid(),title:'Retaining Wall — 12 Oak St',address:'12 Oak St, Avon CT',client:'Jennifer T.',status:'active',crew:['u2','u3','u4'],created:now(),
   phases:[
@@ -424,8 +431,8 @@ function viewCrew(){
   h+=`<div class="member"><div class="av">${initials(c.name)}</div><div style="flex:1"><b>${c.name}</b><div class="muted tiny">${c.role}</div></div>${onclk?'<span class="badge b-active">on clock</span>':''}${c.id===S.me?'<span class="badge b-soon">you</span>':''}</div>`;});
  return h;
 }
-function newMember(){sheet(`<h3>Add crew member</h3><div class="field"><label>Name</label><input id="mn" placeholder="Full name"></div><div class="field"><label>Role</label><select id="mr"><option>Mason</option><option>Laborer</option><option>Site Manager</option><option>Apprentice</option><option>Owner</option></select></div><button class="btn wave" onclick="addMember()">Add to crew</button>`);}
-function addMember(){const n=document.getElementById('mn').value.trim();if(!n)return;S.crew.push({id:uid(),name:n,role:document.getElementById('mr').value});save();closeSheet();render();}
+function newMember(){sheet(`<h3>Add crew member</h3><div class="field"><label>Name</label><input id="mn" placeholder="Full name"></div><div class="field"><label>Phone number (their login)</label><input id="mp" type="tel" inputmode="tel" placeholder="(860) 555-0000"></div><div class="field"><label>Role</label><select id="mr"><option>Mason</option><option>Laborer</option><option>Apprentice</option><option>Site Manager</option><option>Owner</option></select></div><button class="btn wave" onclick="addMember()">Add to crew</button><p class="muted tiny" style="text-align:center;margin-top:10px">They sign in with this phone number. Mason/Laborer/Apprentice = employee view. Site Manager/Owner = admin.</p>`);}
+function addMember(){const n=document.getElementById('mn').value.trim();if(!n)return;const ph=document.getElementById('mp').value.trim();S.crew.push({id:uid(),name:n,role:document.getElementById('mr').value,phone:ph});save();closeSheet();render();}
 
 /* ============ CHAT (general) ============ */
 function viewChat(){
@@ -449,15 +456,22 @@ function onFab(){if(cur==='jobs')newJob();else if(cur==='crew')newMember();}
 /* ============ utils ============ */
 function resizeImg(file,cb){const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{const max=720,sc=Math.min(1,max/Math.max(img.width,img.height));const cv=document.createElement('canvas');cv.width=img.width*sc;cv.height=img.height*sc;cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);cb(cv.toDataURL('image/jpeg',.7));};img.src=e.target.result;};r.readAsDataURL(file);}
 
-/* ============ LOGIN / SIGN-IN ============ */
-function luserHTML(c){return `<div class="luser" onclick="doLogin('${c.id}')"><div class="av">${initials(c.name)}</div><div><div class="nm">${c.name}</div><div class="rl">${c.role}</div></div><div class="go">›</div></div>`;}
+/* ============ LOGIN / SIGN-IN (phone) ============ */
+function normPhone(p){return (p||'').replace(/\D/g,'').slice(-10);}
 function showLogin(){
- const mgr=S.crew.filter(c=>['Owner','Site Manager'].includes(c.role));
- const workers=S.crew.filter(c=>!['Owner','Site Manager'].includes(c.role));
- document.getElementById('loginlist').innerHTML=
-  '<h4>Owner / Manager</h4>'+mgr.map(luserHTML).join('')+
-  '<h4>Crew</h4>'+workers.map(luserHTML).join('');
- document.getElementById('login').classList.add('on');
+ const el=document.getElementById('login');el.classList.add('on');
+ const er=document.getElementById('loginerr');if(er)er.style.display='none';
+ const pin=document.getElementById('phoneIn');if(pin)pin.value='';
+ const hint=document.getElementById('demohint');
+ if(hint)hint.innerHTML='<p class="note" style="margin-top:16px">Demo numbers to try —<br>Admin: <b style="color:#fff">(860) 555-0100</b> · Employee: <b style="color:#fff">(860) 555-0103</b></p>';
+}
+function doPhoneLogin(){
+ const v=normPhone(document.getElementById('phoneIn').value);
+ const er=document.getElementById('loginerr');
+ if(v.length!==10){er.style.display='block';er.textContent='Enter a 10-digit phone number.';return;}
+ const c=S.crew.find(x=>normPhone(x.phone)===v);
+ if(!c){er.style.display='block';er.textContent="That number isn't on the crew yet. Ask your admin to add you.";return;}
+ doLogin(c.id);
 }
 function doLogin(id){S.me=id;S.signedIn=true;save();
  const m=me();document.getElementById('mename').textContent=m.name;document.getElementById('meav').textContent=initials(m.name);
