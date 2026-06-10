@@ -219,14 +219,15 @@ function vJob(jid){
  const ts=D.tasks.filter(t=>t.job_id===jid),p=jobProg(jid);
  let h=`<button class="btn ghost sm" style="margin-bottom:10px" onclick="go('jobs')">‹ All jobs</button><div class="h1">${j.title}</div><div class="sub">${j.address||''} ${j.client?'· '+j.client:''}</div>
  <div class="card"><div class="row" style="justify-content:space-between"><b>${p}% complete</b><span class="muted tiny">${ts.length} steps</span></div><div class="prog"><i style="width:${p}%"></i></div></div>`;
- if(isAdmin())h+=`<button class="btn acc sm" style="margin-bottom:12px" onclick="addTask('${jid}')">＋ Add step</button>`;
+ if(isAdmin())h+=`<div class="row" style="gap:8px;margin-bottom:12px"><button class="btn acc sm" style="flex:1" onclick="voiceSteps('${jid}')">🎙 Talk in steps</button><button class="btn ghost sm" style="flex:1" onclick="addTask('${jid}')">＋ Add step</button></div>`;
  if(!ts.length)h+=`<div class="empty">No steps yet.${isAdmin()?' Add the checklist.':''}</div>`;
  ts.forEach(t=>{const c=compFor(t.id);
-  h+=`<div class="step ${c?'done':''}"><div class="chk" onclick="toggleTask('${t.id}',${t.require_photo})">${c?'✓':''}</div><div style="flex:1;min-width:0"><div class="tx">${t.text}</div><div class="meta">${t.require_photo?'<span class="reqp">📷 photo</span>':''}${c?`<span>✓ ${memberName(c.member_id)} · ${fmtT(c.done_at)}</span>`:''}</div>${c&&c.photo_url?`<img class="thumb" src="${c.photo_url}">`:''}</div></div>`;});
+  h+=`<div class="step ${c?'done':''}"><div class="chk" onclick="toggleTask('${t.id}',${t.require_photo})">${c?'✓':''}</div><div style="flex:1;min-width:0"><div class="tx">${t.text}</div><div class="meta">${t.require_photo?'<span class="reqp">📷 photo</span>':''}${c?`<span>✓ ${memberName(c.member_id)} · ${fmtT(c.done_at)}</span>`:''}</div>${c&&c.photo_url?`<img class="thumb" src="${c.photo_url}">`:''}<div style="margin-top:7px"><button class="tiny" style="font-weight:700;color:var(--red)" onclick="flagTask('${t.id}')">⚑ Flag issue</button></div></div></div>`;});
  // job chat
  h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;color:var(--slate);margin:14px 2px 8px">Job chat</div>`;
- D.msgs.filter(m=>m.job_id===jid).slice(-6).forEach(m=>{h+=`<div class="msg ${m.member_id===ME.id?'me':'them'}"><div class="who">${memberName(m.member_id)}</div>${m.body}<div class="tm">${fmtT(m.created_at)}</div></div>`;});
+ D.msgs.filter(m=>m.job_id===jid).slice(-6).forEach(m=>{const fl=m.body.startsWith('⚑');h+=`<div class="msg ${m.member_id===ME.id?'me':'them'}" style="${fl?'border-left:4px solid var(--red)':''}"><div class="who">${memberName(m.member_id)}</div>${m.body}<div class="tm">${fmtT(m.created_at)}</div></div>`;});
  h+=`<div class="row" style="gap:8px;margin-top:8px"><input id="jmsg" placeholder="Message the crew…" style="flex:1;border:1px solid var(--line2);border-radius:22px;padding:11px 15px" onkeydown="if(event.key==='Enter')sendMsg('${jid}')"><button class="btn acc" style="width:46px;height:46px;border-radius:50%;flex:0 0 46px" onclick="sendMsg('${jid}')">➤</button></div>`;
+ if(isAdmin())h+=`<div style="text-align:center;margin-top:22px"><button class="tiny muted" style="text-decoration:underline" onclick="deleteJob('${jid}')">Delete this job</button></div>`;
  return h;
 }
 async function toggleTask(tid,reqPhoto){
@@ -249,6 +250,33 @@ function addTask(jid){sheet(`<h3>Add step</h3><div class="field"><label>Step</la
 async function saveTask(jid){const t=$('ts').value.trim();if(!t)return;const pos=D.tasks.filter(x=>x.job_id===jid).length;await sb.from('tasks').insert({job_id:jid,text:t,require_photo:$('trq').checked,position:pos});closeSheet();loadAll();}
 async function sendMsg(jid){const i=$('jmsg');const v=i.value.trim();if(!v)return;i.value='';await sb.from('messages').insert({member_id:ME.id,job_id:jid,body:v});loadAll();}
 
+/* ---------- VOICE → STEPS ---------- */
+function parseSteps(t){return t.replace(/\b(\d+)[\).]/g,'\n').split(/\n|(?:\.\s)|(?:,?\s*(?:and then|then|after that|next,?)\s+)/i).map(s=>s.trim().replace(/^[-•\s]+/,'')).filter(s=>s.length>2).map(s=>s.charAt(0).toUpperCase()+s.slice(1));}
+let vrec=null,vlisten=false;
+function voiceSteps(jid){sheet(`<h3>🎙 Talk in the steps</h3><p class="muted tiny">Describe the job out loud, start to finish. Say "next" or "then" between steps.</p><button class="btn ghost" id="micb" style="margin:12px 0" onclick="toggleVoice()">🎙 Tap to start talking</button><div class="field"><label>Steps (edit if needed)</label><textarea id="vtx" style="min-height:120px" placeholder="…or type one per line"></textarea></div><button class="btn acc" onclick="commitVoice('${jid}')">Create steps</button>`);}
+function toggleVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;const b=$('micb');if(!SR){b.textContent='Voice not supported here — type below';return;}if(vlisten){vrec&&vrec.stop();return;}vrec=new SR();vrec.lang='en-US';vrec.continuous=true;vrec.interimResults=true;let fin=$('vtx').value;vrec.onstart=()=>{vlisten=true;b.textContent='● Listening… tap to stop';b.style.color='var(--red)';};vrec.onend=()=>{vlisten=false;b.textContent='🎙 Tap to start talking';b.style.color='';};vrec.onresult=e=>{let it='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)fin+=t+' ';else it+=t;}if($('vtx'))$('vtx').value=fin+it;};try{vrec.start();}catch(e){}}
+async function commitVoice(jid){if(vrec&&vlisten)vrec.stop();const steps=parseSteps(($('vtx')||{}).value||'');if(!steps.length)return;let pos=D.tasks.filter(t=>t.job_id===jid).length;const rows=steps.map(s=>({job_id:jid,text:s,position:pos++}));await sb.from('tasks').insert(rows);closeSheet();loadAll();}
+
+/* ---------- FLAG ISSUE ---------- */
+function flagTask(tid){const t=D.tasks.find(x=>x.id===tid);if(!t)return;sheet(`<h3>Flag an issue</h3><p class="muted tiny">${t.text}</p><div class="field"><textarea id="ftx" placeholder="What's the problem? (e.g. ran out of block, hitting roots)"></textarea></div><button class="btn red" onclick="saveFlag('${t.id}')">Send to admin</button>`);}
+async function saveFlag(tid){const t=D.tasks.find(x=>x.id===tid);const v=$('ftx').value.trim();if(!v||!t)return;await sb.from('messages').insert({member_id:ME.id,job_id:t.job_id,body:'⚑ ISSUE — '+t.text+': '+v});closeSheet();loadAll();}
+
+/* ---------- DELETE JOB ---------- */
+async function deleteJob(jid){if(!confirm('Delete this job and all its steps? This cannot be undone.'))return;await sb.from('jobs').delete().eq('id',jid);go('jobs');loadAll();}
+
+/* ---------- END-OF-DAY RECAP ---------- */
+function recap(){const ts=new Date().setHours(0,0,0,0);
+ const done=D.comps.filter(c=>new Date(c.done_at)>=ts);
+ const flags=D.msgs.filter(m=>new Date(m.created_at)>=ts&&m.body.startsWith('⚑'));
+ const photos=done.filter(c=>c.photo_url).length;
+ const taskText=id=>{const t=D.tasks.find(x=>x.id===id);return t?t.text:'(step)';};
+ const hrs={};D.time.filter(t=>new Date(t.clock_in)>=ts).forEach(t=>{const n=memberName(t.member_id);hrs[n]=(hrs[n]||0)+((new Date(t.clock_out||Date.now())-new Date(t.clock_in))/3600000);});
+ sheet(`<h3>End-of-day recap</h3><p class="muted tiny">${fmtD(Date.now())}</p>
+  <div style="margin-top:12px"><b>✅ Completed (${done.length})</b>${done.length?'<div style="font-size:14px;margin-top:5px;line-height:1.7">'+done.map(c=>'• '+taskText(c.task_id)+' — '+memberName(c.member_id)).join('<br>')+'</div>':'<div class="muted tiny">Nothing checked off yet.</div>'}</div>
+  <div style="margin-top:14px"><b style="color:var(--red)">⚑ Issues (${flags.length})</b>${flags.length?'<div style="font-size:14px;margin-top:5px;line-height:1.7;color:var(--red)">'+flags.map(f=>'• '+f.body.replace('⚑ ISSUE — ','')).join('<br>')+'</div>':'<div class="muted tiny">None flagged.</div>'}</div>
+  <div style="margin-top:14px"><b>⏱ Hours</b>${Object.keys(hrs).length?'<div style="font-size:14px;margin-top:5px;line-height:1.7">'+Object.entries(hrs).map(([n,h])=>'• '+n+': '+h.toFixed(1)+'h').join('<br>')+'</div>':'<div class="muted tiny">No hours logged.</div>'}</div>
+  <div style="margin-top:14px"><b>📷 Photos captured:</b> ${photos}</div>`);}
+
 /* ---------- NEW JOB ---------- */
 function newJob(){sheet(`<h3>New job</h3><div class="field"><label>Title</label><input id="njt" placeholder="e.g. Retaining Wall — 12 Oak St"></div><div class="field"><label>Address</label><input id="nja" placeholder="Street, town"></div><div class="field"><label>Client</label><input id="njc" placeholder="Homeowner"></div><button class="btn acc" onclick="createJob()">Create job</button>`);}
 async function createJob(){const t=$('njt').value.trim();if(!t)return;const {data}=await sb.from('jobs').insert({title:t,address:$('nja').value.trim(),client:$('njc').value.trim()}).select().single();closeSheet();await loadAll();if(data)openJob(data.id);}
@@ -263,6 +291,7 @@ function vToday(){
  <div class="row" style="gap:10px;margin-bottom:14px"><div class="stat"><div class="n">${(mins/60).toFixed(1)}</div><div class="l">Your hours today</div></div></div>`;
  if(open){const j=D.jobs.find(x=>x.id===open.job_id);h+=`<div class="card" style="border:2px solid var(--green)"><div class="row"><span class="badge b-active">● On the clock</span></div><div class="muted tiny" style="margin:8px 0 12px">Since ${fmtT(open.clock_in)} · ${j?j.title:''}</div><button class="btn red" onclick="clockOut()">Clock out</button></div>`;}
  else{h+=`<div class="card"><div class="field"><label>Which job?</label><select id="cjob">${D.jobs.map(j=>`<option value="${j.id}">${j.title}</option>`).join('')||'<option value="">No jobs</option>'}</select></div><button class="btn green" onclick="clockIn()">Clock in</button></div>`;}
+ h+=`<button class="btn ghost" style="margin-top:8px" onclick="recap()">📋 End-of-day recap</button>`;
  if(isAdmin()){
   h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;color:var(--slate);margin:18px 2px 8px">Crew hours today</div>`;
   D.members.forEach(m=>{const ts=D.time.filter(t=>t.member_id===m.id&&new Date(t.clock_in)>=tStart);const mn=ts.reduce((a,c)=>a+((new Date(c.clock_out||Date.now())-new Date(c.clock_in))/60000),0);const on=ts.some(t=>!t.clock_out);
