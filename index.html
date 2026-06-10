@@ -10,477 +10,308 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{
- --slate:#0d0d0d;--slate2:#1f1f1f;--bg:#eef0f2;--card:#ffffff;--line:#e0e3e7;--line2:#cdd2d8;
- --txt:#15171a;--mut:#6b7178;--mut2:#9aa0a6;
- --wave:#e85a00;--accent:#e85a00;--accent2:#e85a00;
- --green:#1aa863;--greenbg:#e4f6ec;--amber:#e0871f;--amberbg:#fbefdc;--red:#df4b3a;--redbg:#fbe6e3;
- --rad:14px;--sh:0 2px 10px rgba(20,33,46,.06);}
+:root{--slate:#0d0d0d;--slate2:#1f1f1f;--bg:#eef0f2;--card:#fff;--line:#e0e3e7;--line2:#cdd2d8;
+ --txt:#15171a;--mut:#6b7178;--mut2:#9aa0a6;--accent:#e85a00;--green:#1aa863;--greenbg:#e4f6ec;--amber:#e0871f;--red:#df4b3a;--redbg:#fbe6e3;
+ --rad:14px;--sh:0 2px 10px rgba(20,33,46,.06)}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
-body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
-#app{max-width:540px;margin:0 auto;height:100vh;display:flex;flex-direction:column;background:var(--bg);position:relative}
+body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+#app{max-width:540px;margin:0 auto;height:100vh;display:flex;flex-direction:column;position:relative}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,textarea,select{font-family:inherit;font-size:16px}
 .muted{color:var(--mut)}.tiny{font-size:12px}
-
-/* top bar */
+/* appbar */
 .appbar{background:var(--slate);color:#fff;padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;display:flex;align-items:center;gap:12px;flex-shrink:0;z-index:20}
-.logo{height:30px;display:flex;align-items:center;gap:9px}
-.logo img{height:30px;width:auto;display:none}
-.logo .wm{font-weight:800;font-size:16px;letter-spacing:.01em;line-height:1;color:#fff}
-.logo .wm .o{color:#e85a00}
+.wm{font-weight:800;font-size:15px;letter-spacing:.01em}.wm .o{color:var(--accent)}
 .appbar .sp{flex:1}
+.chip{font-size:11px;font-weight:700;padding:5px 9px;border-radius:99px;background:#2a2a2a;color:#fff}
+.chip.live{background:var(--green)}
 .rolepill{display:flex;align-items:center;gap:7px;background:var(--slate2);border-radius:99px;padding:6px 10px 6px 7px;font-size:12px;font-weight:600}
-.rolepill .av{width:24px;height:24px;border-radius:50%;background:var(--wave);display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff}
-.clockchip{font-size:11px;font-weight:700;padding:5px 9px;border-radius:99px;background:#2a3a4a}
-.clockchip.live{background:var(--green)}
-
-/* screen area */
+.rolepill .av{width:24px;height:24px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-size:11px;font-weight:700}
 .screen{flex:1;overflow-y:auto;padding:14px 14px 90px;-webkit-overflow-scrolling:touch}
-.h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:2px 0 2px}
-.sub{color:var(--mut);font-size:13px;margin-bottom:14px}
+.h1{font-size:22px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--mut);font-size:13px;margin-bottom:14px}
 .row{display:flex;align-items:center;gap:10px}
-
-/* cards */
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden}
-.jobcard{padding:15px}
-.jobcard:active{transform:scale(.99)}
-.jobcard .t{font-size:17px;font-weight:700}
-.jobcard .ad{color:var(--mut);font-size:13px;margin-top:2px}
-.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;text-transform:uppercase;letter-spacing:.03em}
-.b-active{background:var(--greenbg);color:#137a47}.b-soon{background:#e8eef5;color:#3a566f}.b-done{background:#e9ecef;color:#69757f}.b-hold{background:var(--amberbg);color:#a4630f}
-.prog{height:8px;background:#eef1f4;border-radius:99px;overflow:hidden;margin:12px 0 8px}
-.prog i{display:block;height:100%;background:var(--wave);border-radius:99px;transition:width .4s}
-.metarow{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--mut);font-weight:500}
-.metarow .it{display:flex;align-items:center;gap:4px}
-.issues{color:var(--red);font-weight:700}
-.avs{display:flex}.avs .av{width:24px;height:24px;border-radius:50%;background:var(--slate2);color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700;border:2px solid var(--card);margin-left:-7px}
-.avs .av:first-child{margin-left:0}
-
-/* buttons */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--sh);margin-bottom:12px;padding:15px}
+.card:active{transform:scale(.997)}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;text-transform:uppercase}
+.b-active{background:var(--greenbg);color:#137a47}.b-soon{background:#e8eef5;color:#3a566f}
+.prog{height:8px;background:#eef1f4;border-radius:99px;overflow:hidden;margin:11px 0 8px}.prog i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:.4s}
+.jt{font-size:17px;font-weight:700}.jad{color:var(--mut);font-size:13px;margin-top:2px}
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;border-radius:12px;font-weight:700;font-size:15px;background:var(--slate);color:#fff;transition:.15s}
-.btn:active{transform:scale(.98)}
-.btn.wave{background:var(--wave)}
-.btn.ghost{background:#fff;color:var(--txt);border:1.5px solid var(--line2)}
-.btn.green{background:var(--green)}.btn.red{background:var(--red)}.btn.amber{background:var(--amber)}
+.btn:active{transform:scale(.98)}.btn:disabled{opacity:.5}
+.btn.acc{background:var(--accent)}.btn.green{background:var(--green)}.btn.red{background:var(--red)}.btn.ghost{background:#fff;color:var(--txt);border:1.5px solid var(--line2)}
 .btn.sm{padding:10px 14px;font-size:13px;width:auto}
-.fab{position:absolute;right:16px;bottom:78px;width:56px;height:56px;border-radius:50%;background:var(--wave);color:#fff;font-size:28px;display:grid;place-items:center;box-shadow:0 6px 20px rgba(47,127,216,.4);z-index:25}
-
-/* bottom nav */
+.fab{position:absolute;right:16px;bottom:78px;width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;font-size:28px;display:grid;place-items:center;box-shadow:0 6px 20px rgba(232,90,0,.4);z-index:25}
 .nav{position:absolute;left:0;right:0;bottom:0;height:calc(64px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#fff;border-top:1px solid var(--line);display:flex;z-index:24;max-width:540px;margin:0 auto}
 .nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--mut2);font-size:10.5px;font-weight:600}
-.nav button.on{color:var(--accent)}
-.nav .ic{font-size:22px;line-height:1}
-
-/* checklist */
-.phase{margin-bottom:14px}
-.phase .ph{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--slate);margin:6px 2px 8px}
-.phase .ph .pct{margin-left:auto;font-size:11px;color:var(--mut);font-weight:700}
+.nav button.on{color:var(--accent)}.nav .ic{font-size:22px;line-height:1}
 .step{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:9px;display:flex;gap:12px;align-items:flex-start}
 .step.done{background:#f6faf7;border-color:#cfe9da}
-.chk{width:28px;height:28px;border-radius:8px;border:2px solid var(--line2);flex-shrink:0;display:grid;place-items:center;font-size:16px;color:#fff;transition:.15s}
+.chk{width:28px;height:28px;border-radius:8px;border:2px solid var(--line2);flex:0 0 28px;display:grid;place-items:center;font-size:16px;color:#fff}
 .step.done .chk{background:var(--green);border-color:var(--green)}
-.step .body{flex:1;min-width:0}
-.step .tx{font-size:15px;font-weight:500;line-height:1.35}
-.step.done .tx{color:var(--mut);text-decoration:line-through}
-.step .meta{font-size:11.5px;color:var(--mut);margin-top:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.flag{font-size:11px;font-weight:700;color:var(--red);background:var(--redbg);padding:2px 7px;border-radius:6px}
-.reqp{font-size:10px;font-weight:700;color:var(--accent);background:#e7f0fb;padding:2px 7px;border-radius:6px}
-.thumb{width:46px;height:46px;border-radius:8px;object-fit:cover;border:1px solid var(--line)}
-.stepacts{display:flex;gap:8px;margin-top:9px}
-.stepacts button{font-size:12px;font-weight:700;padding:7px 11px;border-radius:8px;background:#f0f3f6;color:var(--slate)}
-.stepacts button.fl{color:var(--red);background:var(--redbg)}
-
-/* chat */
+.step .tx{font-size:15px;font-weight:500;line-height:1.35}.step.done .tx{color:var(--mut);text-decoration:line-through}
+.step .meta{font-size:11.5px;color:var(--mut);margin-top:5px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.reqp{font-size:10px;font-weight:700;color:var(--accent);background:#fbe6db;padding:2px 7px;border-radius:6px}
+.thumb{width:46px;height:46px;border-radius:8px;object-fit:cover;border:1px solid var(--line);margin-top:8px}
 .msg{max-width:82%;padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.4;margin-bottom:9px}
 .msg .who{font-size:11px;font-weight:700;margin-bottom:2px;color:var(--accent)}
-.msg.me{background:var(--slate);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
-.msg.me .who{color:#9fc4ee}
+.msg.me{background:var(--slate);color:#fff;margin-left:auto;border-bottom-right-radius:4px}.msg.me .who{color:#f4a06a}
 .msg.them{background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
-.msg .ph{margin-top:6px;border-radius:8px;max-width:160px;display:block}
 .msg .tm{font-size:10px;color:var(--mut2);margin-top:3px}
 .chatbar{position:absolute;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));max-width:540px;margin:0 auto;display:flex;gap:8px;padding:10px 12px;background:#fff;border-top:1px solid var(--line)}
 .chatbar input{flex:1;border:1px solid var(--line2);border-radius:22px;padding:11px 15px}
-.chatbar button{width:44px;height:44px;border-radius:50%;background:var(--wave);color:#fff;font-size:18px;flex-shrink:0}
-
-/* modal / sheet */
-.sheet{position:fixed;inset:0;background:rgba(20,33,46,.5);z-index:60;display:none;align-items:flex-end;justify-content:center}
-.sheet.on{display:flex}
-.sheetcard{background:#fff;width:100%;max-width:540px;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:90vh;overflow-y:auto;animation:up .25s}
-@keyframes up{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
-.sheetcard h3{font-size:19px;font-weight:800;margin-bottom:4px}
-.field{margin:12px 0}
-.field label{display:block;font-size:12px;font-weight:700;color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em}
-.field input,.field textarea,.field select{width:100%;border:1.5px solid var(--line2);border-radius:11px;padding:13px}
-.field textarea{min-height:90px;resize:vertical}
-.micbig{width:100%;padding:18px;border-radius:14px;border:2px dashed var(--line2);display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--mut);font-weight:700;background:#fafbfc}
-.micbig.on{border-color:var(--red);background:var(--redbg);color:var(--red)}
-.micbig .big{font-size:30px}
-.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
-.stat .n{font-size:26px;font-weight:800}.stat .l{font-size:11px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-top:2px}
-.seg{display:flex;background:#e6ebf0;border-radius:11px;padding:4px;margin-bottom:14px}
-.seg button{flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:700;color:var(--mut)}
-.seg button.on{background:#fff;color:var(--slate);box-shadow:var(--sh)}
+.chatbar button{width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;font-size:18px;flex:0 0 44px}
 .member{display:flex;align-items:center;gap:12px;padding:13px;background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:9px}
-.member .av{width:40px;height:40px;border-radius:50%;background:var(--wave);color:#fff;display:grid;place-items:center;font-weight:700}
+.member .av{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;flex:1}.stat .n{font-size:26px;font-weight:800}.stat .l{font-size:11px;color:var(--mut);font-weight:600;text-transform:uppercase;margin-top:2px}
 .empty{text-align:center;color:var(--mut);padding:40px 20px;font-size:14px}
-.recap{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px}
-.recap .rt{font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.03em;color:var(--slate);margin-bottom:8px}
-.recap li{margin:5px 0 5px 18px;font-size:14px}
+.field{margin:12px 0}.field label{display:block;font-size:12px;font-weight:700;color:var(--mut);margin-bottom:6px;text-transform:uppercase}
+.field input,.field textarea,.field select{width:100%;border:1.5px solid var(--line2);border-radius:11px;padding:13px}
+.sheet{position:fixed;inset:0;background:rgba(13,13,13,.5);z-index:60;display:none;align-items:flex-end;justify-content:center}
+.sheet.on{display:flex}
+.sheetcard{background:#fff;width:100%;max-width:540px;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:90vh;overflow-y:auto}
+.sheetcard h3{font-size:19px;font-weight:800;margin-bottom:4px}
 /* login */
-#login{position:fixed;inset:0;background:#080808;color:#fff;z-index:80;display:none;flex-direction:column;padding:calc(env(safe-area-inset-top) + 46px) 22px 30px;overflow-y:auto;max-width:540px;margin:0 auto}
+#login{position:fixed;inset:0;background:#080808;color:#fff;z-index:80;display:none;flex-direction:column;justify-content:center;padding:30px 24px calc(30px + env(safe-area-inset-bottom));max-width:540px;margin:0 auto;overflow-y:auto}
 #login.on{display:flex}
-#login .lwm{font-weight:800;font-size:22px;text-align:center;letter-spacing:.01em}
-#login .lwm .o{color:#e85a00}
+#login .lwm{font-weight:800;font-size:24px;text-align:center}.lwm .o{color:var(--accent)}
 #login .ltag{text-align:center;color:#9aa0a6;font-size:13px;margin:6px 0 26px}
-#login h4{font-size:11px;color:#7a7a7a;font-weight:700;margin:16px 4px 9px;text-transform:uppercase;letter-spacing:.06em}
-.luser{display:flex;align-items:center;gap:13px;background:#151515;border:1px solid #2a2a2a;border-radius:14px;padding:14px;margin-bottom:10px}
-.luser:active{border-color:#e85a00;transform:scale(.99)}
-.luser .av{width:44px;height:44px;border-radius:50%;background:#e85a00;color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px;flex-shrink:0}
-.luser .nm{font-weight:700;font-size:16px}
-.luser .rl{color:#9aa0a6;font-size:13px}
-.luser .go{margin-left:auto;color:#e85a00;font-size:22px}
-#login .note{text-align:center;color:#5f5f5f;font-size:12px;margin-top:20px;line-height:1.5}
+#login .field input{background:#151515;border:1.5px solid #2a2a2a;color:#fff}
+#login .note{text-align:center;color:#6a6a6a;font-size:12px;margin-top:18px;line-height:1.5}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 <div id="app">
   <div class="appbar">
-    <div class="logo"><img id="logoimg" src="logo.png" alt="Complete Care Masonry" onerror="this.style.display='none'">
-      <div class="wm"><span class="o">COMPLETE CARE</span> MASONRY</div>
-    </div>
+    <div class="wm"><span class="o">COMPLETE CARE</span> MASONRY</div>
     <div class="sp"></div>
-    <span class="clockchip" id="clockchip" onclick="go('today')">Clocked out</span>
-    <button class="rolepill" onclick="showLogin()"><span class="av" id="meav">R</span><span id="mename">Russ</span></button>
+    <span class="chip" id="clockchip" onclick="go('today')">—</span>
+    <button class="rolepill" onclick="logout()"><span class="av" id="meav">?</span><span id="mename">—</span></button>
   </div>
-  <div class="screen" id="screen"></div>
-  <button class="fab" id="fab" onclick="onFab()">＋</button>
-  <div class="nav" id="nav">
-    <button data-s="jobs" class="on" onclick="go('jobs')"><span class="ic">🧱</span>Jobs</button>
+  <div class="screen" id="screen"><div class="empty">Loading…</div></div>
+  <button class="fab" id="fab" style="display:none" onclick="onFab()">＋</button>
+  <div class="nav" id="nav" style="display:none">
+    <button data-s="jobs" onclick="go('jobs')"><span class="ic">🧱</span>Jobs</button>
     <button data-s="today" onclick="go('today')"><span class="ic">⏱</span>Today</button>
     <button data-s="crew" onclick="go('crew')"><span class="ic">👷</span>Crew</button>
     <button data-s="chat" onclick="go('chat')"><span class="ic">💬</span>Messages</button>
   </div>
 </div>
+
 <div id="login">
   <div class="lwm"><span class="o">COMPLETE CARE</span> MASONRY</div>
-  <div class="ltag">Crew app · sign in with your phone</div>
-  <div style="max-width:360px;margin:8px auto 0;width:100%">
-    <div class="field"><label style="color:#9aa0a6">Phone number</label>
-      <input id="phoneIn" type="tel" inputmode="tel" autocomplete="tel" placeholder="(860) 555-0000" style="background:#151515;border:1.5px solid #2a2a2a;color:#fff" onkeydown="if(event.key==='Enter')doPhoneLogin()">
-    </div>
-    <button class="btn wave" onclick="doPhoneLogin()">Continue ›</button>
-    <p id="loginerr" style="color:#df4b3a;font-size:13px;text-align:center;margin-top:10px;display:none"></p>
-    <div id="demohint"></div>
+  <div class="ltag">Crew app · sign in</div>
+  <div style="max-width:360px;margin:0 auto;width:100%">
+    <div class="field"><label style="color:#9aa0a6">Your name</label><input id="lname" placeholder="e.g. Russ" autocomplete="off"></div>
+    <div class="field"><label style="color:#9aa0a6">4-digit PIN</label><input id="lpin" type="tel" inputmode="numeric" maxlength="6" placeholder="••••" autocomplete="off" onkeydown="if(event.key==='Enter')signIn()"></div>
+    <button class="btn acc" id="lbtn" onclick="signIn()">Sign in ›</button>
+    <p id="lerr" style="color:#df4b3a;font-size:13px;text-align:center;margin-top:10px;display:none"></p>
   </div>
-  <p class="note">Real version texts you a 6-digit code, so only you can sign in.<br>Admins and employees get different apps automatically.</p>
+  <p class="note">First time? Just enter the name &amp; PIN your admin set for you.<br>Admin demo — name <b style="color:#fff">Russ</b>, PIN <b style="color:#fff">1234</b></p>
 </div>
 <div class="sheet" id="sheet" onclick="if(event.target===this)closeSheet()"><div class="sheetcard" id="sheetcard"></div></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/* ============ STATE ============ */
-const LS='ccm_state_v2';
-const uid=()=>Math.random().toString(36).slice(2,9);
-const now=()=>Date.now();
+const SB_URL='https://znkozmvqunobhhsfewej.supabase.co';
+const SB_KEY='sb_publishable_O1g53HbttlcHPQ2X3vmdZA_H9gj6-cH';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+const emailFor=id=>id+'@ccmcrew.app';
+const pwFor=pin=>'CCM-'+pin;
+const $=id=>document.getElementById(id);
+const initials=n=>(n||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
 const fmtT=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
 const fmtD=t=>new Date(t).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-const initials=n=>n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
 
-function seed(){
- const crew=[
-  {id:'u1',name:'Russ',role:'Owner',phone:'(860) 555-0100'},
-  {id:'u2',name:'Mike D',role:'Site Manager',phone:'(860) 555-0102'},
-  {id:'u3',name:'Carlos',role:'Mason',phone:'(860) 555-0103'},
-  {id:'u4',name:'Tyler',role:'Laborer',phone:'(860) 555-0104'},
- ];
- const job={id:uid(),title:'Retaining Wall — 12 Oak St',address:'12 Oak St, Avon CT',client:'Jennifer T.',status:'active',crew:['u2','u3','u4'],created:now(),
-  phases:[
-   {name:'Prep & Layout',steps:[
-     mkstep('Confirm wall line + string lines set',true,'u2'),
-     mkstep('Photo of site before digging',true,'u3',true),
-     mkstep('Call in utility locate / verify marks'),
-   ]},
-   {name:'Footing',steps:[
-     mkstep('Excavate trench to 12" below grade',false,null,true),
-     mkstep('Compact base, 4" crushed stone'),
-     mkstep('Check footing is level — photo the level',false,null,true),
-   ]},
-   {name:'Block / Stone',steps:[
-     mkstep('Mortar mix 1:3 — no soupy mix'),
-     mkstep('Lay first course, check level every block'),
-     mkstep('Install drainage gravel + pipe behind wall',false,null,true),
-     mkstep('Backfill in lifts, compact each lift'),
-   ]},
-   {name:'Cleanup',steps:[
-     mkstep('Wash tools, stack extra block'),
-     mkstep('Final walkthrough photos — all sides',false,null,true),
-   ]},
-  ],
-  messages:[{by:'u1',text:'Crew — drainage pipe is the #1 thing. Do NOT skip the gravel behind the wall. Photo it before backfill.',at:now()-3600000}],
- };
- // a flagged issue example
- job.phases[1].steps[0].flag='Trench hitting tree roots on the left end — how deep do you want me to go around them?';
- return {crew, jobs:[job], me:'u1', signedIn:false, clock:[], generalChat:[{by:'u1',text:'Welcome to the Complete Care app. Everything per job lives here now.',at:now()-7200000}]};
+let ME=null;           // {id,name,role}
+let D={jobs:[],tasks:[],comps:[],time:[],msgs:[],members:[]};
+let cur='jobs',curJob=null;
+const isAdmin=()=>ME&&ME.role==='admin';
+
+/* ---------- AUTH ---------- */
+async function signIn(){
+ const name=$('lname').value.trim(), pin=$('lpin').value.trim();
+ const err=$('lerr'),btn=$('lbtn');
+ if(!name||pin.length<4){err.style.display='block';err.textContent='Enter your name and 4-digit PIN.';return;}
+ btn.disabled=true;btn.innerHTML='<span class="spin"></span>';err.style.display='none';
+ try{
+  const {data,error}=await sb.rpc('lookup_member',{p_name:name,p_pin:pin});
+  if(error)throw error;
+  const row=data&&data[0];
+  if(!row){throw new Error("That name + PIN isn't recognized. Ask your admin.");}
+  const email=emailFor(row.member_id), pw=pwFor(pin);
+  if(!row.claimed){
+   const su=await sb.auth.signUp({email,password:pw});
+   if(su.error && !/already registered/i.test(su.error.message))throw su.error;
+   const si=await sb.auth.signInWithPassword({email,password:pw});
+   if(si.error)throw si.error;
+   await sb.rpc('claim_member',{p_member_id:row.member_id,p_pin:pin});
+  }else{
+   const si=await sb.auth.signInWithPassword({email,password:pw});
+   if(si.error)throw new Error('Wrong PIN.');
+  }
+  await afterLogin();
+ }catch(e){err.style.display='block';err.textContent=e.message||'Sign-in failed.';}
+ btn.disabled=false;btn.textContent='Sign in ›';
 }
-function mkstep(text,done,by,reqPhoto){return {id:uid(),text,done:!!done,by:by||null,at:done?now()-Math.random()*5e6:null,photo:null,note:null,flag:null,reqPhoto:!!reqPhoto};}
+async function afterLogin(){
+ const {data:{session}}=await sb.auth.getSession();
+ if(!session){showLogin();return;}
+ const {data:m}=await sb.from('members').select('*').eq('auth_id',session.user.id).maybeSingle();
+ if(!m){showLogin();return;}
+ ME={id:m.id,name:m.name,role:m.role};
+ $('login').classList.remove('on');$('nav').style.display='flex';
+ $('mename').textContent=ME.name;$('meav').textContent=initials(ME.name);
+ await loadAll();subscribe();go('jobs');
+}
+function showLogin(){$('login').classList.add('on');$('nav').style.display='none';$('fab').style.display='none';}
+async function logout(){await sb.auth.signOut();ME=null;$('lname').value='';$('lpin').value='';showLogin();}
 
-let S=load();
-function load(){try{const d=JSON.parse(localStorage.getItem(LS));if(d&&d.jobs)return d;}catch(e){}return seed();}
-function save(){localStorage.setItem(LS,JSON.stringify(S));}
-const me=()=>S.crew.find(c=>c.id===S.me);
-const isOwner=()=>['Owner','Site Manager'].includes(me().role);
-const job=id=>S.jobs.find(j=>j.id===id);
-function jobProgress(j){let t=0,d=0;j.phases.forEach(p=>p.steps.forEach(s=>{t++;if(s.done)d++;}));return t?Math.round(d/t*100):0;}
-function jobIssues(j){let n=0;j.phases.forEach(p=>p.steps.forEach(s=>{if(s.flag)n++;}));return n;}
+/* ---------- DATA ---------- */
+async function loadAll(){
+ const [jobs,tasks,comps,time,msgs,members]=await Promise.all([
+  sb.from('jobs').select('*').order('created_at',{ascending:false}),
+  sb.from('tasks').select('*').order('position'),
+  sb.from('task_completions').select('*'),
+  sb.from('time_entries').select('*').order('clock_in',{ascending:false}),
+  sb.from('messages').select('*').order('created_at'),
+  sb.from('members').select('id,name,role'),
+ ]);
+ D={jobs:jobs.data||[],tasks:tasks.data||[],comps:comps.data||[],time:time.data||[],msgs:msgs.data||[],members:members.data||[]};
+ render();updateClock();
+}
+let subbed=false;
+function subscribe(){if(subbed)return;subbed=true;
+ sb.channel('ccm').on('postgres_changes',{event:'*',schema:'public'},()=>{loadAll();}).subscribe();}
+const memberName=id=>{const m=D.members.find(x=>x.id===id);return m?m.name:'—';};
+const compFor=tid=>D.comps.find(c=>c.task_id===tid);
+const myOpenShift=()=>D.time.find(t=>t.member_id===ME.id&&!t.clock_out);
 
-/* ============ ROUTER ============ */
-let cur='jobs', curJob=null;
-function go(s){cur=s;curJob=null;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));render();window.scrollTo&&document.getElementById('screen').scrollTo(0,0);}
+/* ---------- ROUTER ---------- */
+function go(s){cur=s;curJob=null;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));render();$('screen').scrollTop=0;}
 function openJob(id){cur='job';curJob=id;render();}
 function render(){
- const el=document.getElementById('screen');
- document.getElementById('fab').style.display=(cur==='jobs'&&isOwner())||(cur==='crew'&&isOwner())?'grid':'none';
- if(cur==='jobs')el.innerHTML=viewJobs();
- else if(cur==='job')el.innerHTML=viewJob(job(curJob));
- else if(cur==='today')el.innerHTML=viewToday();
- else if(cur==='crew')el.innerHTML=viewCrew();
- else if(cur==='chat')el.innerHTML=viewChat();
- updateClockChip();
- if(cur==='chat'||cur==='job')scrollChat();
+ if(!ME)return;
+ $('fab').style.display=((cur==='jobs'||cur==='crew')&&isAdmin())?'grid':'none';
+ const el=$('screen');
+ if(cur==='jobs')el.innerHTML=vJobs();
+ else if(cur==='job')el.innerHTML=vJob(curJob);
+ else if(cur==='today')el.innerHTML=vToday();
+ else if(cur==='crew')el.innerHTML=vCrew();
+ else if(cur==='chat'){el.innerHTML=vChat();setTimeout(()=>{const c=$('screen');c.scrollTop=c.scrollHeight;},30);}
+ updateClock();
 }
+function jobProg(jid){const ts=D.tasks.filter(t=>t.job_id===jid);if(!ts.length)return 0;const done=ts.filter(t=>compFor(t.id)).length;return Math.round(done/ts.length*100);}
 
-/* ============ JOBS ============ */
-function viewJobs(){
- const owner=isOwner();
- const jobs=owner?S.jobs:S.jobs.filter(j=>j.crew.includes(S.me));
- let h=`<div class="h1">${owner?'Jobs':'My Jobs'}</div><div class="sub">${owner?S.jobs.filter(j=>j.status==='active').length+' active · tap a job to see every step':"You're on "+jobs.length+" job"+(jobs.length===1?'':'s')+" · tap to see your steps"}</div>`;
- if(!owner&&!openShift()&&jobs.length)h+=`<div class="card" style="padding:14px;border:1.5px solid var(--accent)"><div class="row"><div style="flex:1"><b>Start your day</b><div class="muted tiny">Clock in when you reach the site.</div></div><button class="btn green sm" onclick="go('today')">Clock in</button></div>`;
- if(!jobs.length)h+=`<div class="empty">${owner?'No jobs yet.<br>Tap ＋ to add one (or talk it in).':"You're not on any jobs yet.<br>Your manager will assign you."}</div>`;
- jobs.forEach(j=>{
-  const p=jobProgress(j),iss=jobIssues(j),bc={active:'b-active',soon:'b-soon',done:'b-done',hold:'b-hold'}[j.status];
-  h+=`<div class="card jobcard" onclick="openJob('${j.id}')">
-   <div class="row"><div style="flex:1"><div class="t">${j.title}</div><div class="ad">${j.address}</div></div><span class="badge ${bc}">${j.status}</span></div>
-   <div class="prog"><i style="width:${p}%"></i></div>
-   <div class="metarow"><span class="it">${p}% done</span>${iss?`<span class="it issues">⚑ ${iss} issue${iss>1?'s':''}</span>`:''}<span style="flex:1"></span>
-    <span class="avs">${j.crew.slice(0,4).map(id=>{const c=S.crew.find(x=>x.id===id);return `<span class="av">${c?initials(c.name):'?'}</span>`}).join('')}</span></div>
-  </div>`;
- });
+/* ---------- JOBS ---------- */
+function vJobs(){
+ let h=`<div class="h1">${isAdmin()?'Jobs':'My Jobs'}</div><div class="sub">${D.jobs.length} job${D.jobs.length===1?'':'s'} · tap to see the steps</div>`;
+ if(!isAdmin()&&!myOpenShift()&&D.jobs.length)h+=`<div class="card" style="border:1.5px solid var(--accent)"><div class="row"><div style="flex:1"><b>Start your day</b><div class="muted tiny">Clock in when you reach the site.</div></div><button class="btn green sm" onclick="go('today')">Clock in</button></div>`;
+ if(!D.jobs.length)h+=`<div class="empty">${isAdmin()?'No jobs yet. Tap ＋ to add one.':'No jobs assigned yet.'}</div>`;
+ D.jobs.forEach(j=>{const p=jobProg(j.id);
+  h+=`<div class="card" onclick="openJob('${j.id}')"><div class="row"><div style="flex:1"><div class="jt">${j.title}</div><div class="jad">${j.address||''}</div></div><span class="badge b-active">${j.status||'active'}</span></div><div class="prog"><i style="width:${p}%"></i></div><div class="muted tiny">${p}% complete · ${D.tasks.filter(t=>t.job_id===j.id).length} steps</div></div>`;});
  return h;
 }
-
-/* ============ JOB DETAIL ============ */
-function viewJob(j){
- if(!j)return '<div class="empty">Job not found.</div>';
- const p=jobProgress(j);
- let h=`<button class="btn ghost sm" style="margin-bottom:10px" onclick="go('jobs')">‹ All jobs</button>
- <div class="h1">${j.title}</div><div class="sub">${j.address} · ${j.client||''}</div>
- <div class="card" style="padding:14px"><div class="row" style="justify-content:space-between"><b>${p}% complete</b><span class="muted tiny">${j.crew.length} on crew</span></div><div class="prog"><i style="width:${p}%"></i></div></div>`;
- if(isOwner())h+=`<div class="row" style="gap:8px;margin-bottom:14px"><button class="btn wave sm" style="flex:1" onclick="voiceSteps('${j.id}')">🎙 Talk in steps</button><button class="btn ghost sm" style="flex:1" onclick="addStepPrompt('${j.id}')">＋ Add step</button></div>`;
- j.phases.forEach((ph,pi)=>{
-  let t=ph.steps.length,d=ph.steps.filter(s=>s.done).length;
-  h+=`<div class="phase"><div class="ph">${ph.name}<span class="pct">${d}/${t}</span></div>`;
-  ph.steps.forEach((s,si)=>{
-   const by=s.by?S.crew.find(c=>c.id===s.by):null;
-   h+=`<div class="step ${s.done?'done':''}">
-     <div class="chk" onclick="toggleStep('${j.id}',${pi},${si})">${s.done?'✓':''}</div>
-     <div class="body">
-       <div class="tx">${s.text}</div>
-       <div class="meta">${s.reqPhoto?'<span class="reqp">📷 photo required</span>':''}${s.done&&by?`<span>✓ ${by.name} · ${fmtT(s.at)}</span>`:''}${s.note?`<span>📝 ${s.note}</span>`:''}</div>
-       ${s.flag?`<div class="meta"><span class="flag">⚑ ${s.flag}</span></div>`:''}
-       ${s.photo?`<img class="thumb" src="${s.photo}" style="margin-top:8px">`:''}
-       <div class="stepacts">
-        ${!s.done?`<button onclick="checkWithPhoto('${j.id}',${pi},${si})">📷 Check + photo</button>`:''}
-        <button class="fl" onclick="flagStep('${j.id}',${pi},${si})">⚑ Flag issue</button>
-       </div>
-     </div></div>`;
-  });
-  h+=`</div>`;
- });
- // mini chat preview
- h+=`<div class="ph" style="font-size:13px;font-weight:800;text-transform:uppercase;color:var(--slate);margin:8px 2px">Job chat</div><div id="jobchat">`;
- (j.messages||[]).slice(-4).forEach(m=>{const c=S.crew.find(x=>x.id===m.by);h+=`<div class="msg ${m.by===S.me?'me':'them'}"><div class="who">${c?c.name:'?'}</div>${m.text}${m.photo?`<img class="ph" src="${m.photo}">`:''}<div class="tm">${fmtT(m.at)}</div></div>`});
- h+=`</div><div class="row" style="gap:8px;margin-top:8px"><input id="jmsg" placeholder="Message the crew…" style="flex:1;border:1px solid var(--line2);border-radius:22px;padding:11px 15px" onkeydown="if(event.key==='Enter')sendJobMsg('${j.id}')"><button class="btn wave" style="width:46px;height:46px;border-radius:50%;flex:0 0 46px" onclick="sendJobMsg('${j.id}')">➤</button></div>`;
+/* ---------- JOB DETAIL ---------- */
+function vJob(jid){
+ const j=D.jobs.find(x=>x.id===jid);if(!j)return '<div class="empty">Job not found.</div>';
+ const ts=D.tasks.filter(t=>t.job_id===jid),p=jobProg(jid);
+ let h=`<button class="btn ghost sm" style="margin-bottom:10px" onclick="go('jobs')">‹ All jobs</button><div class="h1">${j.title}</div><div class="sub">${j.address||''} ${j.client?'· '+j.client:''}</div>
+ <div class="card"><div class="row" style="justify-content:space-between"><b>${p}% complete</b><span class="muted tiny">${ts.length} steps</span></div><div class="prog"><i style="width:${p}%"></i></div></div>`;
+ if(isAdmin())h+=`<button class="btn acc sm" style="margin-bottom:12px" onclick="addTask('${jid}')">＋ Add step</button>`;
+ if(!ts.length)h+=`<div class="empty">No steps yet.${isAdmin()?' Add the checklist.':''}</div>`;
+ ts.forEach(t=>{const c=compFor(t.id);
+  h+=`<div class="step ${c?'done':''}"><div class="chk" onclick="toggleTask('${t.id}',${t.require_photo})">${c?'✓':''}</div><div style="flex:1;min-width:0"><div class="tx">${t.text}</div><div class="meta">${t.require_photo?'<span class="reqp">📷 photo</span>':''}${c?`<span>✓ ${memberName(c.member_id)} · ${fmtT(c.done_at)}</span>`:''}</div>${c&&c.photo_url?`<img class="thumb" src="${c.photo_url}">`:''}</div></div>`;});
+ // job chat
+ h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;color:var(--slate);margin:14px 2px 8px">Job chat</div>`;
+ D.msgs.filter(m=>m.job_id===jid).slice(-6).forEach(m=>{h+=`<div class="msg ${m.member_id===ME.id?'me':'them'}"><div class="who">${memberName(m.member_id)}</div>${m.body}<div class="tm">${fmtT(m.created_at)}</div></div>`;});
+ h+=`<div class="row" style="gap:8px;margin-top:8px"><input id="jmsg" placeholder="Message the crew…" style="flex:1;border:1px solid var(--line2);border-radius:22px;padding:11px 15px" onkeydown="if(event.key==='Enter')sendMsg('${jid}')"><button class="btn acc" style="width:46px;height:46px;border-radius:50%;flex:0 0 46px" onclick="sendMsg('${jid}')">➤</button></div>`;
  return h;
 }
-function toggleStep(jid,pi,si){const s=job(jid).phases[pi].steps[si];
- if(!s.done&&s.reqPhoto){return checkWithPhoto(jid,pi,si);}
- s.done=!s.done;s.by=s.done?S.me:null;s.at=s.done?now():null;save();render();}
-function checkWithPhoto(jid,pi,si){
+async function toggleTask(tid,reqPhoto){
+ const c=compFor(tid);
+ if(c){ if(isAdmin()){await sb.from('task_completions').delete().eq('id',c.id);loadAll();} return; }
+ if(reqPhoto){return completeWithPhoto(tid);}
+ await sb.from('task_completions').insert({task_id:tid,member_id:ME.id});loadAll();
+}
+function completeWithPhoto(tid){
  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.capture='environment';
- inp.onchange=e=>{const f=e.target.files[0];if(!f){return;}resizeImg(f,d=>{const s=job(jid).phases[pi].steps[si];s.done=true;s.by=S.me;s.at=now();s.photo=d;save();render();});};
+ inp.onchange=e=>{const f=e.target.files[0];if(!f)return;resizeImg(f,async blob=>{
+   const path=ME.id+'/'+tid+'-'+Date.now()+'.jpg';
+   const up=await sb.storage.from('task-photos').upload(path,blob,{contentType:'image/jpeg'});
+   let url=null; if(!up.error){url=sb.storage.from('task-photos').getPublicUrl(path).data.publicUrl;}
+   await sb.from('task_completions').insert({task_id:tid,member_id:ME.id,photo_url:url});loadAll();
+ });};
  inp.click();
 }
-function flagStep(jid,pi,si){
- const s=job(jid).phases[pi].steps[si];
- sheet(`<h3>Flag an issue</h3><p class="muted tiny" style="margin-bottom:6px">${s.text}</p>
-  <div class="field"><textarea id="flagtx" placeholder="What's the problem? (e.g. ran out of block, footing hitting roots)">${s.flag||''}</textarea></div>
-  <button class="btn red" onclick="saveFlag('${jid}',${pi},${si})">Send flag to owner</button>
-  ${s.flag?`<button class="btn ghost" style="margin-top:8px" onclick="clearFlag('${jid}',${pi},${si})">Clear flag</button>`:''}`);
-}
-function saveFlag(jid,pi,si){const v=document.getElementById('flagtx').value.trim();if(!v)return;job(jid).phases[pi].steps[si].flag=v;
- job(jid).messages.push({by:S.me,text:'⚑ ISSUE flagged: '+v,at:now()});save();closeSheet();render();}
-function clearFlag(jid,pi,si){job(jid).phases[pi].steps[si].flag=null;save();closeSheet();render();}
-function addStepPrompt(jid){
- const j=job(jid);
- sheet(`<h3>Add step</h3>
-  <div class="field"><label>Step</label><input id="nstep" placeholder="e.g. Seal the cap stones"></div>
-  <div class="field"><label>Phase</label><select id="nphase">${j.phases.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('')}</select></div>
-  <label class="row" style="gap:8px;font-size:14px;font-weight:600"><input type="checkbox" id="nreq" style="width:20px;height:20px"> Require a photo to check off</label>
-  <button class="btn wave" style="margin-top:14px" onclick="addStep('${jid}')">Add step</button>`);
-}
-function addStep(jid){const t=document.getElementById('nstep').value.trim();if(!t)return;const pi=+document.getElementById('nphase').value;const req=document.getElementById('nreq').checked;
- job(jid).phases[pi].steps.push(mkstep(t,false,null,req));save();closeSheet();render();}
-function sendJobMsg(jid){const i=document.getElementById('jmsg');const v=i.value.trim();if(!v)return;job(jid).messages.push({by:S.me,text:v,at:now()});i.value='';save();render();}
+function addTask(jid){sheet(`<h3>Add step</h3><div class="field"><label>Step</label><input id="ts" placeholder="e.g. Compact base, 4&quot; stone"></div><label class="row" style="gap:8px;font-weight:600"><input type="checkbox" id="trq" style="width:20px;height:20px"> Require a photo to check off</label><button class="btn acc" style="margin-top:14px" onclick="saveTask('${jid}')">Add step</button>`);}
+async function saveTask(jid){const t=$('ts').value.trim();if(!t)return;const pos=D.tasks.filter(x=>x.job_id===jid).length;await sb.from('tasks').insert({job_id:jid,text:t,require_photo:$('trq').checked,position:pos});closeSheet();loadAll();}
+async function sendMsg(jid){const i=$('jmsg');const v=i.value.trim();if(!v)return;i.value='';await sb.from('messages').insert({member_id:ME.id,job_id:jid,body:v});loadAll();}
 
-/* ============ VOICE → CHECKLIST ============ */
-function parseSteps(text){
- return text.replace(/\b(\d+)[\).]/g,'\n').split(/\n|(?:\.\s)|(?:,?\s*(?:and then|then|after that|next,?|after which)\s+)/i)
-  .map(s=>s.trim().replace(/^[-•\s]+/,'')).filter(s=>s.length>2).map(s=>s[0].toUpperCase()+s.slice(1));
-}
-let vrec=null,vlistening=false;
-function voiceSteps(jid){
- sheet(`<h3>🎙 Talk in the job steps</h3><p class="muted tiny">Just describe the job out loud, start to finish. Say "next" or "then" between steps. I'll turn it into a checklist.</p>
-  <button class="micbig" id="micbig" onclick="toggleVoice()"><span class="big">🎙</span><span id="micst">Tap to start talking</span></button>
-  <div class="field"><label>Transcript (edit if needed)</label><textarea id="vtx" placeholder="…or type the steps here, one per line"></textarea></div>
-  <div class="field"><label>Add to phase</label><select id="vphase">${job(jid).phases.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('')}<option value="new">＋ New phase…</option></select></div>
-  <button class="btn wave" onclick="commitVoice('${jid}')">Create steps</button>`);
-}
-function toggleVoice(){
- const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
- const mb=document.getElementById('micbig'),st=document.getElementById('micst');
- if(!SR){st.textContent='Voice not supported here — type the steps below.';return;}
- if(vlistening){vrec&&vrec.stop();return;}
- vrec=new SR();vrec.lang='en-US';vrec.continuous=true;vrec.interimResults=true;
- let final=document.getElementById('vtx').value;
- vrec.onstart=()=>{vlistening=true;mb.classList.add('on');st.textContent='Listening… tap to stop';};
- vrec.onend=()=>{vlistening=false;mb.classList.remove('on');st.textContent='Tap to start talking';};
- vrec.onresult=e=>{let interim='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)final+=t+' ';else interim+=t;}document.getElementById('vtx').value=final+interim;};
- try{vrec.start();}catch(e){}
-}
-function commitVoice(jid){
- if(vrec&&vlistening)vrec.stop();
- const tx=document.getElementById('vtx').value.trim();if(!tx){return;}
- const steps=parseSteps(tx);if(!steps.length)return;
- const j=job(jid);let pv=document.getElementById('vphase').value;let pi;
- if(pv==='new'){const nm=prompt('Name this phase:','New phase');if(!nm)return;j.phases.push({name:nm,steps:[]});pi=j.phases.length-1;}else pi=+pv;
- steps.forEach(s=>j.phases[pi].steps.push(mkstep(s)));save();closeSheet();render();
-}
+/* ---------- NEW JOB ---------- */
+function newJob(){sheet(`<h3>New job</h3><div class="field"><label>Title</label><input id="njt" placeholder="e.g. Retaining Wall — 12 Oak St"></div><div class="field"><label>Address</label><input id="nja" placeholder="Street, town"></div><div class="field"><label>Client</label><input id="njc" placeholder="Homeowner"></div><button class="btn acc" onclick="createJob()">Create job</button>`);}
+async function createJob(){const t=$('njt').value.trim();if(!t)return;const {data}=await sb.from('jobs').insert({title:t,address:$('nja').value.trim(),client:$('njc').value.trim()}).select().single();closeSheet();await loadAll();if(data)openJob(data.id);}
 
-/* ============ NEW JOB ============ */
-function newJob(){
- sheet(`<h3>New job</h3>
-  <div class="field"><label>Job title</label><input id="njt" placeholder="e.g. Paver Patio — 8 Elm St"></div>
-  <div class="field"><label>Address</label><input id="nja" placeholder="Street, town"></div>
-  <div class="field"><label>Client</label><input id="njc" placeholder="Homeowner name"></div>
-  <button class="btn wave" onclick="createJob()">Create job</button>
-  <p class="muted tiny" style="text-align:center;margin-top:10px">You'll add steps next — type them or talk them in.</p>`);
-}
-function createJob(){const t=document.getElementById('njt').value.trim();if(!t)return;
- const j={id:uid(),title:t,address:document.getElementById('nja').value.trim(),client:document.getElementById('njc').value.trim(),status:'active',crew:[],created:now(),phases:[{name:'Job Steps',steps:[]}],messages:[]};
- S.jobs.unshift(j);save();closeSheet();openJob(j.id);setTimeout(()=>voiceSteps(j.id),250);}
-
-/* ============ TODAY / CLOCK ============ */
-function openShift(){return S.clock.find(c=>c.user===S.me&&!c.out);}
-function viewToday(){
- const open=openShift();
- const todayStart=new Date().setHours(0,0,0,0);
- const mine=S.clock.filter(c=>c.user===S.me&&c.in>=todayStart);
- let mins=mine.reduce((a,c)=>a+(((c.out||now())-c.in)/60000),0);
- const wkStart=todayStart-((new Date().getDay()||7)-1)*864e5;
- let wk=S.clock.filter(c=>c.user===S.me&&c.in>=wkStart).reduce((a,c)=>a+(((c.out||now())-c.in)/60000),0);
- let h=`<div class="h1">Today</div><div class="sub">${fmtD(now())}</div>
- <div class="row" style="gap:10px;margin-bottom:14px"><div class="stat" style="flex:1"><div class="n">${(mins/60).toFixed(1)}</div><div class="l">Hours today</div></div><div class="stat" style="flex:1"><div class="n">${(wk/60).toFixed(1)}</div><div class="l">Hours this week</div></div></div>`;
- if(open){const j=job(open.job);h+=`<div class="card" style="padding:16px;border:2px solid var(--green)"><div class="row"><span class="badge b-active">● On the clock</span><span style="flex:1"></span><b id="runt">${runTime(open.in)}</b></div><div class="muted tiny" style="margin:8px 0 12px">Since ${fmtT(open.in)} · ${j?j.title:'—'}</div><button class="btn red" onclick="clockOut()">Clock out</button></div>`;}
- else{h+=`<div class="card" style="padding:16px"><div class="field"><label>Which job?</label><select id="cjob">${S.jobs.map(j=>`<option value="${j.id}">${j.title}</option>`).join('')||'<option>No jobs</option>'}</select></div><button class="btn green" onclick="clockIn()">Clock in</button></div>`;}
- // recap
- h+=`<button class="btn ghost" style="margin-top:6px" onclick="dailyRecap()">📋 End-of-day recap</button>`;
- // owner: whole crew status
- if(isOwner()){h+=`<div class="ph" style="font-size:13px;font-weight:800;text-transform:uppercase;color:var(--slate);margin:18px 2px 8px">Crew on the clock</div>`;
-  const onnow=S.clock.filter(c=>!c.out);
-  if(!onnow.length)h+=`<div class="empty" style="padding:20px">Nobody clocked in right now.</div>`;
-  onnow.forEach(c=>{const u=S.crew.find(x=>x.id===c.user),j=job(c.job);h+=`<div class="member"><div class="av">${u?initials(u.name):'?'}</div><div style="flex:1"><b>${u?u.name:'?'}</b><div class="muted tiny">${j?j.title:''} · since ${fmtT(c.in)}</div></div><span class="badge b-active">${runTime(c.in)}</span></div>`});}
+/* ---------- TODAY / CLOCK ---------- */
+function vToday(){
+ const open=myOpenShift();
+ const tStart=new Date().setHours(0,0,0,0);
+ const mine=D.time.filter(t=>t.member_id===ME.id&&new Date(t.clock_in)>=tStart);
+ const mins=mine.reduce((a,c)=>a+((new Date(c.clock_out||Date.now())-new Date(c.clock_in))/60000),0);
+ let h=`<div class="h1">Today</div><div class="sub">${fmtD(Date.now())}</div>
+ <div class="row" style="gap:10px;margin-bottom:14px"><div class="stat"><div class="n">${(mins/60).toFixed(1)}</div><div class="l">Your hours today</div></div></div>`;
+ if(open){const j=D.jobs.find(x=>x.id===open.job_id);h+=`<div class="card" style="border:2px solid var(--green)"><div class="row"><span class="badge b-active">● On the clock</span></div><div class="muted tiny" style="margin:8px 0 12px">Since ${fmtT(open.clock_in)} · ${j?j.title:''}</div><button class="btn red" onclick="clockOut()">Clock out</button></div>`;}
+ else{h+=`<div class="card"><div class="field"><label>Which job?</label><select id="cjob">${D.jobs.map(j=>`<option value="${j.id}">${j.title}</option>`).join('')||'<option value="">No jobs</option>'}</select></div><button class="btn green" onclick="clockIn()">Clock in</button></div>`;}
+ if(isAdmin()){
+  h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;color:var(--slate);margin:18px 2px 8px">Crew hours today</div>`;
+  D.members.forEach(m=>{const ts=D.time.filter(t=>t.member_id===m.id&&new Date(t.clock_in)>=tStart);const mn=ts.reduce((a,c)=>a+((new Date(c.clock_out||Date.now())-new Date(c.clock_in))/60000),0);const on=ts.some(t=>!t.clock_out);
+   if(mn>0||on)h+=`<div class="member"><div class="av">${initials(m.name)}</div><div style="flex:1"><b>${m.name}</b><div class="muted tiny">${(mn/60).toFixed(1)}h today</div></div>${on?'<span class="badge b-active">on clock</span>':''}</div>`;});
+ }
  return h;
 }
-function runTime(start){let m=Math.floor((now()-start)/60000);return Math.floor(m/60)+'h '+(m%60)+'m';}
-function clockIn(){const jid=document.getElementById('cjob').value;S.clock.push({id:uid(),user:S.me,job:jid,in:now(),out:null});save();render();}
-function clockOut(){const o=openShift();if(o){o.out=now();}save();render();}
-let clockTimer=setInterval(()=>{if(cur==='today'){const r=document.getElementById('runt');if(r){const o=openShift();if(o)r.textContent=runTime(o.in);}}updateClockChip();},30000);
-function updateClockChip(){const c=document.getElementById('clockchip');const o=openShift();if(o){c.textContent='On clock · '+runTime(o.in);c.classList.add('live');}else{c.textContent='Clocked out';c.classList.remove('live');}}
+async function clockIn(){const jid=$('cjob').value;if(!jid)return;await sb.from('time_entries').insert({member_id:ME.id,job_id:jid});loadAll();}
+async function clockOut(){const o=myOpenShift();if(o){await sb.from('time_entries').update({clock_out:new Date().toISOString()}).eq('id',o.id);}loadAll();}
+function updateClock(){const o=ME&&D.time?myOpenShift():null;const c=$('clockchip');if(!c)return;if(o){c.textContent='On clock';c.classList.add('live');}else{c.textContent='Off';c.classList.remove('live');}}
 
-/* ============ RECAP ============ */
-function dailyRecap(){
- const todayStart=new Date().setHours(0,0,0,0);
- let done=[],issues=[],photos=0,hours={};
- S.jobs.forEach(j=>j.phases.forEach(p=>p.steps.forEach(s=>{
-  if(s.done&&s.at>=todayStart){const u=S.crew.find(c=>c.id===s.by);done.push(`${s.text} — ${u?u.name:''}`);if(s.photo)photos++;}
-  if(s.flag)issues.push(`${j.title}: ${s.flag}`);
- })));
- S.clock.filter(c=>c.in>=todayStart).forEach(c=>{const u=S.crew.find(x=>x.id===c.user);if(!u)return;hours[u.name]=(hours[u.name]||0)+((c.out||now())-c.in)/3600000;});
- sheet(`<h3>End-of-day recap</h3><p class="muted tiny">${fmtD(now())}</p>
-  <div class="recap"><div class="rt">✅ Completed today (${done.length})</div>${done.length?'<ul>'+done.map(d=>`<li>${d}</li>`).join('')+'</ul>':'<p class="muted tiny">Nothing checked off yet.</p>'}</div>
-  <div class="recap"><div class="rt">⚑ Open issues (${issues.length})</div>${issues.length?'<ul>'+issues.map(d=>`<li style="color:var(--red)">${d}</li>`).join('')+'</ul>':'<p class="muted tiny">No issues flagged. </p>'}</div>
-  <div class="recap"><div class="rt">⏱ Hours logged</div>${Object.keys(hours).length?'<ul>'+Object.entries(hours).map(([n,h])=>`<li>${n}: ${h.toFixed(1)}h</li>`).join('')+'</ul>':'<p class="muted tiny">No hours logged today.</p>'}</div>
-  <div class="recap"><div class="rt">📷 Photos captured</div><p style="font-size:14px">${photos} proof photo${photos!==1?'s':''} today</p></div>`);
-}
-
-/* ============ CREW ============ */
-function viewCrew(){
- let h=`<div class="h1">Crew</div><div class="sub">${S.crew.length} people · tap ＋ to add</div>`;
- S.crew.forEach(c=>{const onclk=S.clock.find(x=>x.user===c.id&&!x.out);
-  h+=`<div class="member"><div class="av">${initials(c.name)}</div><div style="flex:1"><b>${c.name}</b><div class="muted tiny">${c.role}</div></div>${onclk?'<span class="badge b-active">on clock</span>':''}${c.id===S.me?'<span class="badge b-soon">you</span>':''}</div>`;});
+/* ---------- CREW ---------- */
+function vCrew(){
+ let h=`<div class="h1">Crew</div><div class="sub">${D.members.length} people${isAdmin()?' · tap ＋ to add':''}</div>`;
+ D.members.forEach(m=>{h+=`<div class="member"><div class="av">${initials(m.name)}</div><div style="flex:1"><b>${m.name}</b><div class="muted tiny">${m.role==='admin'?'Admin':'Employee'}</div></div>${m.id===ME.id?'<span class="badge b-soon">you</span>':''}</div>`;});
  return h;
 }
-function newMember(){sheet(`<h3>Add crew member</h3><div class="field"><label>Name</label><input id="mn" placeholder="Full name"></div><div class="field"><label>Phone number (their login)</label><input id="mp" type="tel" inputmode="tel" placeholder="(860) 555-0000"></div><div class="field"><label>Role</label><select id="mr"><option>Mason</option><option>Laborer</option><option>Apprentice</option><option>Site Manager</option><option>Owner</option></select></div><button class="btn wave" onclick="addMember()">Add to crew</button><p class="muted tiny" style="text-align:center;margin-top:10px">They sign in with this phone number. Mason/Laborer/Apprentice = employee view. Site Manager/Owner = admin.</p>`);}
-function addMember(){const n=document.getElementById('mn').value.trim();if(!n)return;const ph=document.getElementById('mp').value.trim();S.crew.push({id:uid(),name:n,role:document.getElementById('mr').value,phone:ph});save();closeSheet();render();}
+function newMember(){sheet(`<h3>Add crew member</h3><div class="field"><label>Name (their login)</label><input id="mn" placeholder="First name"></div><div class="field"><label>4-digit PIN (their login)</label><input id="mp" type="tel" inputmode="numeric" maxlength="6" placeholder="e.g. 1234"></div><div class="field"><label>Role</label><select id="mr"><option value="employee">Employee</option><option value="admin">Admin</option></select></div><button class="btn acc" onclick="addMember()">Add to crew</button><p class="muted tiny" style="text-align:center;margin-top:10px">They sign in with this name + PIN. Names must be unique.</p>`);}
+async function addMember(){const n=$('mn').value.trim(),p=$('mp').value.trim();if(!n||p.length<4){alert('Name and 4-digit PIN required.');return;}
+ const {error}=await sb.from('members').insert({name:n,pin:p,role:$('mr').value});
+ if(error){alert(error.message.includes('duplicate')?'That name is taken — use a different one.':error.message);return;}
+ closeSheet();loadAll();}
 
-/* ============ CHAT (general) ============ */
-function viewChat(){
- let h=`<div class="h1">Messages</div><div class="sub">Company-wide crew chat</div><div id="genchat" style="padding-bottom:60px">`;
- S.generalChat.forEach(m=>{const c=S.crew.find(x=>x.id===m.by);h+=`<div class="msg ${m.by===S.me?'me':'them'}"><div class="who">${c?c.name:'?'}</div>${m.text}<div class="tm">${fmtT(m.at)}</div></div>`});
- h+=`</div><div class="chatbar"><input id="gmsg" placeholder="Message everyone…" onkeydown="if(event.key==='Enter')sendGen()"><button onclick="sendGen()">➤</button></div>`;
+/* ---------- CHAT ---------- */
+function vChat(){
+ let h=`<div class="h1">Messages</div><div class="sub">Company crew chat</div><div style="padding-bottom:60px">`;
+ D.msgs.filter(m=>!m.job_id).forEach(m=>{h+=`<div class="msg ${m.member_id===ME.id?'me':'them'}"><div class="who">${memberName(m.member_id)}</div>${m.body}<div class="tm">${fmtT(m.created_at)}</div></div>`;});
+ h+=`</div>`;
+ // chatbar appended outside scroll
+ setTimeout(()=>{if(!$('cbar')){const b=document.createElement('div');b.className='chatbar';b.id='cbar';const inp=document.createElement('input');inp.id='gmsg';inp.placeholder='Message everyone…';inp.addEventListener('keydown',e=>{if(e.key==='Enter')sendGen();});const bt=document.createElement('button');bt.textContent='➤';bt.onclick=sendGen;b.appendChild(inp);b.appendChild(bt);$('app').appendChild(b);}},10);
  return h;
 }
-function sendGen(){const i=document.getElementById('gmsg');const v=i.value.trim();if(!v)return;S.generalChat.push({by:S.me,text:v,at:now()});i.value='';save();render();}
-function scrollChat(){setTimeout(()=>{['genchat','jobchat'].forEach(id=>{const e=document.getElementById(id);if(e)e.scrollTop=e.scrollHeight;});const sc=document.getElementById('screen');if(cur==='chat')sc.scrollTop=sc.scrollHeight;},40);}
+async function sendGen(){const i=$('gmsg');const v=i.value.trim();if(!v)return;i.value='';await sb.from('messages').insert({member_id:ME.id,body:v});loadAll();}
+function clearChatbar(){const b=$('cbar');if(b)b.remove();}
 
-/* ============ ROLE SWITCH ============ */
-function openRole(){sheet(`<h3>Who's using the app?</h3><p class="muted tiny">Switch to test owner vs worker view.</p>${S.crew.map(c=>`<div class="member" onclick="setMe('${c.id}')"><div class="av">${initials(c.name)}</div><div style="flex:1"><b>${c.name}</b><div class="muted tiny">${c.role}</div></div>${c.id===S.me?'<span class="badge b-active">current</span>':''}</div>`).join('')}`);}
-function setMe(id){S.me=id;save();closeSheet();const m=me();document.getElementById('mename').textContent=m.name;document.getElementById('meav').textContent=initials(m.name);go('jobs');}
-
-/* ============ SHEET / FAB ============ */
-function sheet(html){document.getElementById('sheetcard').innerHTML=html+`<button class="btn ghost" style="margin-top:10px" onclick="closeSheet()">Close</button>`;document.getElementById('sheet').classList.add('on');}
-function closeSheet(){if(vrec&&vlistening)vrec.stop();document.getElementById('sheet').classList.remove('on');}
+/* ---------- SHEET / FAB ---------- */
+function sheet(html){$('sheetcard').innerHTML=html+`<button class="btn ghost" style="margin-top:10px" onclick="closeSheet()">Close</button>`;$('sheet').classList.add('on');}
+function closeSheet(){$('sheet').classList.remove('on');}
 function onFab(){if(cur==='jobs')newJob();else if(cur==='crew')newMember();}
+function resizeImg(file,cb){const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{const max=720,sc=Math.min(1,max/Math.max(img.width,img.height));const cv=document.createElement('canvas');cv.width=img.width*sc;cv.height=img.height*sc;cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);cv.toBlob(cb,'image/jpeg',.7);};img.src=e.target.result;};r.readAsDataURL(file);}
 
-/* ============ utils ============ */
-function resizeImg(file,cb){const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{const max=720,sc=Math.min(1,max/Math.max(img.width,img.height));const cv=document.createElement('canvas');cv.width=img.width*sc;cv.height=img.height*sc;cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);cb(cv.toDataURL('image/jpeg',.7));};img.src=e.target.result;};r.readAsDataURL(file);}
+/* remove chatbar when leaving chat */
+const _go=go;go=function(s){if(cur==='chat'&&s!=='chat')clearChatbar();_go(s);};
 
-/* ============ LOGIN / SIGN-IN (phone) ============ */
-function normPhone(p){return (p||'').replace(/\D/g,'').slice(-10);}
-function showLogin(){
- const el=document.getElementById('login');el.classList.add('on');
- const er=document.getElementById('loginerr');if(er)er.style.display='none';
- const pin=document.getElementById('phoneIn');if(pin)pin.value='';
- const hint=document.getElementById('demohint');
- if(hint)hint.innerHTML='<p class="note" style="margin-top:16px">Demo numbers to try —<br>Admin: <b style="color:#fff">(860) 555-0100</b> · Employee: <b style="color:#fff">(860) 555-0103</b></p>';
-}
-function doPhoneLogin(){
- const v=normPhone(document.getElementById('phoneIn').value);
- const er=document.getElementById('loginerr');
- if(v.length!==10){er.style.display='block';er.textContent='Enter a 10-digit phone number.';return;}
- const c=S.crew.find(x=>normPhone(x.phone)===v);
- if(!c){er.style.display='block';er.textContent="That number isn't on the crew yet. Ask your admin to add you.";return;}
- doLogin(c.id);
-}
-function doLogin(id){S.me=id;S.signedIn=true;save();
- const m=me();document.getElementById('mename').textContent=m.name;document.getElementById('meav').textContent=initials(m.name);
- document.getElementById('login').classList.remove('on');go('jobs');}
-
-/* boot */
-const m0=me();document.getElementById('mename').textContent=m0.name;document.getElementById('meav').textContent=initials(m0.name);
-if(!S.signedIn){showLogin();}
-render();
+/* ---------- BOOT ---------- */
+(async function(){
+ const {data:{session}}=await sb.auth.getSession();
+ if(session){await afterLogin();}else{showLogin();}
+})();
 </script>
 </body>
 </html>
