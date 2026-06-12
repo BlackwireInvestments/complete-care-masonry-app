@@ -744,16 +744,37 @@ function vCrew(){
   mates.forEach(m=>{h+=`<div class="member"><div class="av">${initials(m.name)}</div><div style="flex:1"><b>${esc(m.name)}</b><div class="muted tiny">${m.role==='admin'?'Admin':'Employee'}</div></div>${m.id===ME.id?'<span class="badge b-soon">you</span>':''}</div>`;});
   return h;
  }
- let h=`<div class="h1">Crew</div><div class="sub">${D.members.length} people · ${D.crews.length} crew${D.crews.length===1?'':'s'} · tap a name to open their file</div>`;
- h+=`<div class="row" style="gap:8px;margin-bottom:12px"><button class="btn ghost sm" style="flex:1" onclick="newCrew()">＋ New crew</button><button class="btn ghost sm" style="flex:1" onclick="newMember()">＋ Add person</button></div>`;
+ let h=`<div class="h1">Crew</div><div class="sub">${D.members.length} people · ${D.crews.length} crew${D.crews.length===1?'':'s'}</div>`;
+ h+=`<div class="row" style="gap:8px;margin-bottom:8px"><button class="btn ghost sm" style="flex:1" onclick="newCrew()">＋ New crew</button><button class="btn ghost sm" style="flex:1" onclick="newMember()">＋ Add person</button></div>`;
+ h+=`<button class="btn ghost sm" style="width:100%;margin-bottom:6px" onclick="moveCrewSheet()">🔀 Move people between crews</button>`;
  const groups=D.crews.map(c=>({id:c.id,name:c.name})).concat([{id:null,name:'Unassigned'}]);
  groups.forEach(g=>{const mem=D.members.filter(m=>(m.crew_id||null)===g.id);
   if(g.id===null&&!mem.length)return;
-  h+=`<div class="row" style="justify-content:space-between;margin:14px 2px 8px"><span style="font-weight:800;font-size:13px;text-transform:uppercase">${esc(g.name)} <span class="muted" style="font-weight:600">· ${mem.length}</span></span>${g.id?`<button class="tiny muted" style="text-decoration:underline" onclick="editCrew('${g.id}')">edit</button>`:''}</div>`;
-  if(!mem.length)h+=`<div class="muted tiny" style="padding:0 2px 6px">No one assigned. Open a person to add them here.</div>`;
-  mem.forEach(m=>{h+=`<div class="member tap" onclick="openEmpFile('${m.id}')"><div class="av">${initials(m.name)}</div><div style="flex:1"><b>${esc(m.name)}</b><div class="muted tiny">${m.role==='admin'?'Admin':'Employee'} · ${onbDoneCount(m.id)}/${ONB.length} docs</div></div>${m.id===ME.id?'<span class="badge b-soon">you</span>':'<span class="muted">›</span>'}</div>`;});
+  h+=`<div class="row" style="justify-content:space-between;margin:14px 2px 8px"><span style="font-weight:800;font-size:13px;text-transform:uppercase">${esc(g.name)} <span class="muted" style="font-weight:600">· ${mem.length}</span></span><span style="display:flex;gap:12px">${g.id?`<button class="tiny" style="color:var(--accent);font-weight:700" onclick="addToCrew('${g.id}')">＋ add</button><button class="tiny muted" style="text-decoration:underline" onclick="editCrew('${g.id}')">edit</button>`:''}</span></div>`;
+  if(!mem.length)h+=`<div class="muted tiny" style="padding:0 2px 6px">No one here yet. Tap ＋ add to move someone onto this crew.</div>`;
+  mem.forEach(m=>{h+=`<div class="member"><div class="av">${initials(m.name)}</div><div style="flex:1;min-width:0" onclick="openEmpFile('${m.id}')"><b>${esc(m.name)}</b><div class="muted tiny">${m.role==='admin'?'Admin':'Employee'} · ${onbDoneCount(m.id)}/${ONB.length} docs</div></div>${m.id===ME.id?'<span class="badge b-soon">you</span>':''}<button class="btn ghost sm" style="padding:7px 10px" onclick="movePerson('${m.id}')">Move ▾</button></div>`;});
  });
  return h;
+}
+function addToCrew(crewId){const c=D.crews.find(x=>x.id===crewId);if(!c)return;const avail=D.members.filter(m=>(m.crew_id||null)!==crewId);
+ let h=`<h3>Add to ${esc(c.name)}</h3><p class="muted tiny">Tap a person to move them onto this crew.</p>`;
+ if(!avail.length)h+=`<div class="muted tiny" style="padding:10px 0">Everyone is already on this crew.</div>`;
+ avail.forEach(m=>{h+=`<div class="member tap" onclick="moveToCrew('${m.id}','${crewId}')"><div class="av">${initials(m.name)}</div><div style="flex:1;min-width:0"><b>${esc(m.name)}</b><div class="muted tiny">${m.crew_id?'On '+esc(crewName(m.crew_id)):'Unassigned'}</div></div><span style="color:var(--accent);font-weight:800">＋</span></div>`;});
+ sheet(h);
+}
+function movePerson(id){const m=D.members.find(x=>x.id===id);if(!m)return;
+ let h=`<h3>Move ${esc(m.name)}</h3><p class="muted tiny">Pick a crew.</p>`;
+ h+=`<div class="member tap" onclick="moveToCrew('${id}','')"><div style="flex:1"><b>Unassigned</b></div>${!m.crew_id?'<span class="badge b-active">current</span>':''}</div>`;
+ D.crews.forEach(c=>{h+=`<div class="member tap" onclick="moveToCrew('${id}','${c.id}')"><div style="flex:1"><b>${esc(c.name)}</b></div>${m.crew_id===c.id?'<span class="badge b-active">current</span>':''}</div>`;});
+ sheet(h);
+}
+async function moveToCrew(id,crewId){const {error}=await sb.from('members').update({crew_id:crewId||null}).eq('id',id);if(error){toast(error.message,'err');return;}closeSheet();toast('Moved'+(crewId?' to '+crewName(crewId):' to Unassigned'),'ok');loadAll();}
+function moveCrewSheet(){
+ let h=`<h3>Move people between crews</h3><p class="muted tiny">Change anyone’s crew right here.</p>`;
+ if(!D.crews.length)h+=`<div class="card" style="background:#fff8ee;border-color:var(--amber)"><b style="color:var(--amber)">Make a crew first</b><div class="muted tiny">Tap “＋ New crew” to create one, then move people in.</div></div>`;
+ D.members.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'')).forEach(m=>{
+  h+=`<div class="row" style="gap:10px;margin:10px 0"><div class="av" style="width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px">${initials(m.name)}</div><div style="flex:1;min-width:0"><b style="font-size:14px">${esc(m.name)}</b></div><select onchange="assignMemberCrew('${m.id}',this.value)" style="width:48%;border:1.5px solid var(--line2);border-radius:9px;padding:9px;font-size:14px">${crewSelectOpts(m.crew_id)}</select></div>`;});
+ sheet(h);
 }
 function newCrew(){sheet(`<h3>New crew</h3><div class="field"><label>Crew name</label><input id="cn" placeholder="e.g. Crew A · Mike’s Crew · East Team"></div><button class="btn acc" onclick="saveCrew()">Create crew</button>`);}
 async function saveCrew(){const n=$('cn').value.trim();if(!n){toast('Name the crew','err');return;}closeSheet();const {error}=await sb.from('crews').insert({name:n});if(error){toast(/duplicate/i.test(error.message)?'That crew name is taken.':error.message,'err');return;}toast('Crew created','ok');loadAll();}
