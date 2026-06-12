@@ -177,7 +177,7 @@ const ONB=[
  {k:'w4_fed',i:'🇺🇸',t:'Federal Tax — W-4',d:'Sets how much federal tax comes out of your check. Open the W-4, fill it in, sign, and upload.',a:'Upload signed W-4',link:'https://www.irs.gov/forms-pubs/about-form-w-4'},
  {k:'ctw4',i:'🏛️',t:'CT State Tax — CT-W4',d:'Connecticut state tax withholding. Open Form CT-W4, fill it in, sign, and upload.',a:'Upload signed CT-W4',link:'https://portal.ct.gov/drs/drs-forms/current-year-forms/withholding-forms'},
  {k:'payroll',i:'🏦',t:'Payroll & Direct Deposit',d:'So you get paid. We run payroll through DataPay. Open the direct-deposit form, add your bank routing & account number, attach a voided check, and upload.',a:'Upload direct deposit form',link:'./direct-deposit-form.pdf'},
- {k:'osha10',i:'⛑️',t:'OSHA 10 Card',d:'You’ll need an OSHA 10 construction safety card (about $85, ~10 hours online — you cover this). Complete the course, then upload your card.',a:'Upload OSHA 10 card',link:'https://www.osha.com/courses/osha-10-construction'},
+ {k:'osha10',i:'⛑️',t:'OSHA 10 Card',d:'You’ll need an OSHA 10 construction safety card (about $85, ~10 hours online — you cover this). Pick any OSHA-authorized provider from the official list, complete the course, then upload your card.',a:'Upload OSHA 10 card',link:'https://www.osha.gov/training/outreach/training-providers'},
 ];
 const onbDoneCount=mid=>ONB.filter(o=>D.onb.find(x=>x.member_id===mid&&x.item===o.k)).length;
 let cur='jobs',curJob=null,dashPeriod='week';
