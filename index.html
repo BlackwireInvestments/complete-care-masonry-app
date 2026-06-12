@@ -170,7 +170,16 @@ const fmtT=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-d
 const fmtD=t=>new Date(t).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
 
 let ME=null;
-let D={jobs:[],tasks:[],comps:[],time:[],msgs:[],members:[]};
+let D={jobs:[],tasks:[],comps:[],time:[],msgs:[],members:[],onb:[]};
+const ONB=[
+ {k:'photo_id',i:'🪪',t:'Photo ID',d:'Upload a clear photo of your driver’s license or state ID (front). This confirms who you are.',a:'Upload photo ID',link:null},
+ {k:'i9',i:'📋',t:'I-9 — Work Eligibility',d:'Federal law requires this for every new hire. Open the form, fill out Section 1, sign it, and upload. (Your boss completes the employer section.)',a:'Upload completed I-9',link:'https://www.uscis.gov/i-9'},
+ {k:'w4_fed',i:'🇺🇸',t:'Federal Tax — W-4',d:'Sets how much federal tax comes out of your check. Open the W-4, fill it in, sign, and upload.',a:'Upload signed W-4',link:'https://www.irs.gov/forms-pubs/about-form-w-4'},
+ {k:'ctw4',i:'🏛️',t:'CT State Tax — CT-W4',d:'Connecticut state tax withholding. Open Form CT-W4, fill it in, sign, and upload.',a:'Upload signed CT-W4',link:'https://portal.ct.gov/drs/drs-forms/current-year-forms/withholding-forms'},
+ {k:'payroll',i:'🏦',t:'Payroll & Direct Deposit',d:'So you get paid. We run payroll through DataPay. Open the direct-deposit form, add your bank routing & account number, attach a voided check, and upload.',a:'Upload direct deposit form',link:'./direct-deposit-form.pdf'},
+ {k:'osha10',i:'⛑️',t:'OSHA 10 Card',d:'You’ll need an OSHA 10 construction safety card (about $85, ~10 hours online — you cover this). Complete the course, then upload your card.',a:'Upload OSHA 10 card',link:'https://www.osha.com/courses/osha-10-construction'},
+];
+const onbDoneCount=mid=>ONB.filter(o=>D.onb.find(x=>x.member_id===mid&&x.item===o.k)).length;
 let cur='jobs',curJob=null,dashPeriod='week';
 const isAdmin=()=>ME&&ME.role==='admin';
 
@@ -236,7 +245,7 @@ async function afterLogin(){
  const {data:m}=await sb.from('members').select('*').eq('auth_id',session.user.id).maybeSingle();
  if(!m){showLogin();return;}
  ME={id:m.id,name:m.name,role:m.role};localStorage.setItem('ccm_me',JSON.stringify(ME));
- mountUI();await loadAll();subscribe();go('jobs');flush();maybeTour();
+ mountUI();await loadAll();subscribe();go((!isAdmin()&&onbDoneCount(ME.id)<ONB.length)?'onboard':'jobs');flush();maybeTour();
 }
 function showLogin(){$('login').classList.add('on');$('nav').style.display='none';$('fab').style.display='none';}
 async function logout(){try{await sb.auth.signOut();}catch(e){}ME=null;localStorage.removeItem('ccm_me');$('lname').value='';$('lpin').value='';showLogin();}
@@ -249,15 +258,16 @@ async function loadAll(opt={}){
  const preserve=opt.preserve!==false;
  if(!navigator.onLine){restoreD();preserve?renderSafe():render();updateClock();updateNet();return;}
  try{
-  const [jobs,tasks,comps,time,msgs,crew]=await Promise.all([
+  const [jobs,tasks,comps,time,msgs,crew,onb]=await Promise.all([
    sb.from('jobs').select('*').order('created_at',{ascending:false}),
    sb.from('tasks').select('*').order('position'),
    sb.from('task_completions').select('*'),
    sb.from('time_entries').select('*').order('clock_in',{ascending:false}),
    sb.from('messages').select('*').order('created_at'),
    sb.rpc('list_crew'),
+   sb.from('onboarding').select('*'),
   ]);
-  D={jobs:jobs.data||[],tasks:tasks.data||[],comps:comps.data||[],time:time.data||[],msgs:msgs.data||[],members:crew.data||[]};
+  D={jobs:jobs.data||[],tasks:tasks.data||[],comps:comps.data||[],time:time.data||[],msgs:msgs.data||[],members:crew.data||[],onb:onb.data||[]};
   cacheD();
  }catch(e){restoreD();}
  preserve?renderSafe():render();updateClock();updateNet();
@@ -279,6 +289,7 @@ function paint(){const el=$('screen');
  else if(cur==='today')el.innerHTML=vToday();
  else if(cur==='crew')el.innerHTML=vCrew();
  else if(cur==='dash')el.innerHTML=vDash();
+ else if(cur==='onboard')el.innerHTML=vOnboard();
  else if(cur==='chat')el.innerHTML=vChat();
 }
 function render(){if(!ME)return;paint();fabState();updateClock();if(cur==='chat')scrollChatBottom();}
@@ -296,12 +307,49 @@ function jobProg(jid){const ts=D.tasks.filter(t=>t.job_id===jid);if(!ts.length)r
 /* ---------- JOBS ---------- */
 function vJobs(){
  let h=`<div class="h1">${isAdmin()?'Jobs':'My Jobs'}</div><div class="sub">${D.jobs.length} job${D.jobs.length===1?'':'s'} · tap to see the steps</div>`;
+ if(!isAdmin()){const dc=onbDoneCount(ME.id);if(dc<ONB.length)h+=`<div class="card tap" style="border:1.5px solid var(--accent);background:#fff7f2" onclick="go('onboard')"><div class="row"><div style="font-size:22px">📋</div><div style="flex:1"><b>Finish your onboarding</b><div class="muted tiny">${dc} of ${ONB.length} done — tap to complete your new-hire paperwork.</div></div><span class="muted">›</span></div></div>`;}
  if(!isAdmin()&&!myOpenShift()&&D.jobs.length)h+=`<div class="card"><div class="row"><div style="flex:1"><b>Start your day</b><div class="muted tiny">Clock in when you reach the site.</div></div><button class="btn green sm" onclick="go('today')">Clock in</button></div></div>`;
  if(!D.jobs.length)h+=`<div class="empty">${isAdmin()?'No jobs yet. Tap ＋ to add one.':'No jobs assigned yet.'}</div>`;
  D.jobs.forEach(j=>{const p=jobProg(j.id);
   h+=`<div class="card tap" onclick="openJob('${j.id}')"><div class="row"><div style="flex:1"><div class="jt">${esc(j.title)}</div><div class="jad">${esc(j.address||'')}</div></div><span class="badge b-active">${esc(j.status||'active')}</span></div><div class="prog"><i style="width:${p}%"></i></div><div class="muted tiny">${p}% complete · ${D.tasks.filter(t=>t.job_id===j.id).length} steps</div></div>`;});
  return h;
 }
+/* ---------- ONBOARDING (employee) ---------- */
+function vOnboard(){
+ const n=ONB.length, done=onbDoneCount(ME.id), pct=Math.round(done/n*100);
+ let h=`<button class="btn ghost sm" style="margin-bottom:10px" onclick="go('jobs')">‹ Back</button>`;
+ h+=`<div class="h1">Welcome aboard! 👷</div><div class="sub">Let’s knock out your paperwork — tap each item, follow the steps, and upload. You can do it all from your phone.</div>`;
+ h+=`<div class="card"><div class="row" style="justify-content:space-between"><b>${done} of ${n} done</b><span class="muted tiny">${pct}%</span></div><div class="prog"><i style="width:${pct}%"></i></div></div>`;
+ ONB.forEach((o,idx)=>{const rec=D.onb.find(x=>x.member_id===ME.id&&x.item===o.k);const dn=!!rec;
+  h+=`<div class="card"><div class="row" style="align-items:flex-start;gap:12px"><div style="font-size:28px;line-height:1">${o.i}</div><div style="flex:1;min-width:0">
+    <b>${idx+1}. ${o.t}</b> ${dn?'<span class="badge b-active">✓ uploaded</span>':''}
+    <div class="muted" style="font-size:13px;margin:5px 0 11px;line-height:1.5">${o.d}</div>
+    ${o.link?`<a href="${o.link}" target="_blank" rel="noopener" class="btn ghost sm" style="width:100%;text-decoration:none;margin-bottom:8px">📄 Open the form</a>`:''}
+    <button class="btn ${dn?'ghost':'acc'} sm" style="width:100%" onclick="uploadOnb('${o.k}')">${dn?'↻ Replace upload':o.a}</button>
+  </div></div></div>`;});
+ if(done>=n)h+=`<div class="card" style="background:var(--greenbg);border-color:#bfe8d0;text-align:center"><b style="color:#137a47">🎉 You’re all set!</b><div class="muted tiny" style="margin-top:4px">Your boss will review everything. Welcome to the crew!</div></div>`;
+ else h+=`<p class="muted tiny" style="text-align:center;margin:6px 0">Your documents are private — only you and your boss can see them.</p>`;
+ return h;
+}
+function uploadOnb(itemKey){
+ if(!navigator.onLine){toast('You need a connection to upload','err');return;}
+ const inp=document.createElement('input');inp.type='file';inp.accept='image/*,application/pdf';
+ inp.onchange=e=>{const f=e.target.files[0];if(!f)return;toast('Uploading…');(async()=>{
+  try{
+   const ext=(f.name.split('.').pop()||'dat').toLowerCase().replace(/[^a-z0-9]/g,'');
+   const path=ME.id+'/'+itemKey+'-'+Date.now()+'.'+ext;
+   const up=await sb.storage.from('onboarding-docs').upload(path,f,{upsert:true,contentType:f.type||'application/octet-stream'});
+   if(up.error){toast('Upload failed: '+up.error.message,'err');return;}
+   const {error}=await sb.from('onboarding').upsert({member_id:ME.id,item:itemKey,file_url:path,status:'submitted',updated_at:new Date().toISOString()},{onConflict:'member_id,item'});
+   if(error){toast(error.message,'err');return;}
+   toast('Uploaded ✓','ok');loadAll();
+  }catch(err){toast('Upload failed','err');}
+ })();};
+ inp.click();
+}
+async function viewDoc(path){try{const {data,error}=await sb.storage.from('onboarding-docs').createSignedUrl(path,3600);if(error||!data){toast('Could not open document','err');return;}window.open(data.signedUrl,'_blank');}catch(e){toast('Could not open document','err');}}
+function toggleOnb(id){const e=$('onb_'+id);if(e)e.style.display=e.style.display==='none'?'block':'none';}
+
 /* ---------- JOB DETAIL ---------- */
 function vJob(jid){
  const j=D.jobs.find(x=>x.id===jid);if(!j)return '<div class="empty">Job not found.</div>';
@@ -456,6 +504,12 @@ function vDash(){
  h+=`<div class="card" style="background:var(--slate);color:#fff"><div class="row" style="justify-content:space-between"><b>Total payroll hours · ${esc(label)}</b><b style="font-size:20px">${grand.toFixed(1)}h</b></div></div>`;
  const flags=D.msgs.filter(m=>(m.body||'').startsWith('⚑')&&new Date(m.created_at).getTime()>=ps).slice(-6).reverse();
  if(flags.length){h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;margin:16px 2px 8px;color:var(--red)">⚑ Recent issues</div>`;flags.forEach(f=>{h+=`<div class="card" style="border-left:4px solid var(--red)"><div class="tiny muted">${esc(memberName(f.member_id))} · ${fmtD(f.created_at)} · ${fmtT(f.created_at)}</div>${esc(f.body.replace('⚑ ISSUE — ',''))}</div>`;});}
+ // onboarding status
+ h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;margin:16px 2px 8px">Onboarding status</div>`;
+ const crew=D.members.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+ crew.forEach(m=>{const dc=onbDoneCount(m.id);const full=dc===ONB.length;
+  h+=`<div class="card" style="padding:0"><div class="row" style="padding:13px" onclick="toggleOnb('${m.id}')"><div style="flex:1"><b>${esc(m.name)}</b><div class="muted tiny">${m.role==='admin'?'Admin':'Employee'}</div></div><div style="font-weight:800;font-size:14px">${full?'<span style="color:var(--green)">✓ complete</span>':dc+'/'+ONB.length}</div></div>
+   <div id="onb_${m.id}" style="display:none;border-top:1px solid var(--line);padding:4px 13px 9px">${ONB.map(o=>{const rec=D.onb.find(x=>x.member_id===m.id&&x.item===o.k);return `<div class="row" style="justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0f2f4;font-size:13px"><span>${o.i} ${o.t}</span>${rec?`<button class="tiny" style="font-weight:700;color:var(--accent)" onclick="viewDoc('${esc(rec.file_url)}')">View ›</button>`:'<span class="muted tiny">— missing</span>'}</div>`;}).join('')}</div></div>`;});
  const jobs=D.jobs.slice(0,6);
  if(jobs.length){h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;margin:16px 2px 8px">Jobs progress</div>`;jobs.forEach(j=>{const p=jobProg(j.id);h+=`<div class="card tap" onclick="openJob('${j.id}')"><div class="row" style="justify-content:space-between"><b>${esc(j.title)}</b><span class="muted tiny">${p}%</span></div><div class="prog"><i style="width:${p}%"></i></div></div>`;});}
  return h;
