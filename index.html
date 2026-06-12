@@ -180,7 +180,7 @@ const ONB=[
  {k:'osha10',i:'⛑️',t:'OSHA 10 Card',d:'You’ll need an OSHA 10 construction safety card (about $85, ~10 hours online — you cover this). Pick any OSHA-authorized provider from the official list, complete the course, then upload your card.',a:'Upload OSHA 10 card',link:'https://www.osha.gov/training/outreach/training-providers'},
 ];
 const onbDoneCount=mid=>ONB.filter(o=>D.onb.find(x=>x.member_id===mid&&x.item===o.k)).length;
-let cur='jobs',curJob=null,dashPeriod='week';
+let cur='jobs',curJob=null,dashPeriod='week',curMember=null,signedUrls={};
 const isAdmin=()=>ME&&ME.role==='admin';
 
 /* ---------- TOAST ---------- */
@@ -289,6 +289,7 @@ function paint(){const el=$('screen');
  else if(cur==='today')el.innerHTML=vToday();
  else if(cur==='crew')el.innerHTML=vCrew();
  else if(cur==='dash')el.innerHTML=vDash();
+ else if(cur==='empfile')el.innerHTML=vEmpFile(curMember);
  else if(cur==='onboard')el.innerHTML=vOnboard();
  else if(cur==='chat')el.innerHTML=vChat();
 }
@@ -504,12 +505,11 @@ function vDash(){
  h+=`<div class="card" style="background:var(--slate);color:#fff"><div class="row" style="justify-content:space-between"><b>Total payroll hours · ${esc(label)}</b><b style="font-size:20px">${grand.toFixed(1)}h</b></div></div>`;
  const flags=D.msgs.filter(m=>(m.body||'').startsWith('⚑')&&new Date(m.created_at).getTime()>=ps).slice(-6).reverse();
  if(flags.length){h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;margin:16px 2px 8px;color:var(--red)">⚑ Recent issues</div>`;flags.forEach(f=>{h+=`<div class="card" style="border-left:4px solid var(--red)"><div class="tiny muted">${esc(memberName(f.member_id))} · ${fmtD(f.created_at)} · ${fmtT(f.created_at)}</div>${esc(f.body.replace('⚑ ISSUE — ',''))}</div>`;});}
- // onboarding status
- h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;margin:16px 2px 8px">Onboarding status</div>`;
+ // employee files & onboarding
+ h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;margin:16px 2px 4px">Employee files</div><div class="muted tiny" style="margin:0 2px 8px">Tap a name to see all their forms, documents & hours.</div>`;
  const crew=D.members.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
  crew.forEach(m=>{const dc=onbDoneCount(m.id);const full=dc===ONB.length;
-  h+=`<div class="card" style="padding:0"><div class="row" style="padding:13px" onclick="toggleOnb('${m.id}')"><div style="flex:1"><b>${esc(m.name)}</b><div class="muted tiny">${m.role==='admin'?'Admin':'Employee'}</div></div><div style="font-weight:800;font-size:14px">${full?'<span style="color:var(--green)">✓ complete</span>':dc+'/'+ONB.length}</div></div>
-   <div id="onb_${m.id}" style="display:none;border-top:1px solid var(--line);padding:4px 13px 9px">${ONB.map(o=>{const rec=D.onb.find(x=>x.member_id===m.id&&x.item===o.k);return `<div class="row" style="justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0f2f4;font-size:13px"><span>${o.i} ${o.t}</span>${rec?`<button class="tiny" style="font-weight:700;color:var(--accent)" onclick="viewDoc('${esc(rec.file_url)}')">View ›</button>`:'<span class="muted tiny">— missing</span>'}</div>`;}).join('')}</div></div>`;});
+  h+=`<div class="member tap" onclick="openEmpFile('${m.id}')"><div class="av">${initials(m.name)}</div><div style="flex:1"><b>${esc(m.name)}</b><div class="muted tiny">${m.role==='admin'?'Admin':'Employee'} · ${dc}/${ONB.length} documents</div></div><div style="font-weight:800;font-size:13px;color:${full?'var(--green)':'var(--mut)'}">${full?'✓ complete':dc+'/'+ONB.length} ›</div></div>`;});
  const jobs=D.jobs.slice(0,6);
  if(jobs.length){h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;margin:16px 2px 8px">Jobs progress</div>`;jobs.forEach(j=>{const p=jobProg(j.id);h+=`<div class="card tap" onclick="openJob('${j.id}')"><div class="row" style="justify-content:space-between"><b>${esc(j.title)}</b><span class="muted tiny">${p}%</span></div><div class="prog"><i style="width:${p}%"></i></div></div>`;});}
  return h;
@@ -527,10 +527,39 @@ function exportTimesheet(){const ps=periodStartTs(dashPeriod);
  catch(e){toast('Export not supported here','err');}
 }
 
+/* ---------- EMPLOYEE FILE (admin: one person, everything) ---------- */
+async function openEmpFile(id){
+ curMember=id;signedUrls={};
+ if(navigator.onLine){
+  const docs=D.onb.filter(x=>x.member_id===id&&x.file_url);
+  await Promise.all(docs.map(async d=>{try{const {data}=await sb.storage.from('onboarding-docs').createSignedUrl(d.file_url,3600);if(data)signedUrls[d.item]=data.signedUrl;}catch(e){}}));
+ }
+ cur='empfile';render();$('screen').scrollTop=0;
+}
+function vEmpFile(id){
+ const m=D.members.find(x=>x.id===id);if(!m)return '<div class="empty">Not found.</div>';
+ const done=onbDoneCount(id),n=ONB.length;
+ const wk=D.time.filter(t=>t.member_id===id&&new Date(t.clock_in).getTime()>=periodStartTs('week')).reduce((a,t)=>a+shiftHours(t),0);
+ const all=D.time.filter(t=>t.member_id===id).reduce((a,t)=>a+shiftHours(t),0);
+ let h=`<button class="btn ghost sm" style="margin-bottom:10px" onclick="go('dash')">‹ Back</button>`;
+ h+=`<div class="row" style="gap:12px;margin-bottom:6px"><div style="width:48px;height:48px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:18px">${initials(m.name)}</div><div><div class="h1" style="font-size:22px">${esc(m.name)}</div><div class="muted tiny">${m.role==='admin'?'Admin':'Employee'} · onboarding ${done}/${n}${done===n?' ✓':''}</div></div></div>`;
+ h+=`<div class="row" style="gap:8px;margin:10px 0 16px"><div class="stat"><div class="n">${wk.toFixed(1)}</div><div class="l">Hours this week</div></div><div class="stat"><div class="n">${all.toFixed(1)}</div><div class="l">Hours all-time</div></div></div>`;
+ h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;margin:6px 2px 8px">Documents & forms</div>`;
+ ONB.forEach(o=>{const rec=D.onb.find(x=>x.member_id===id&&x.item===o.k);const url=signedUrls[o.k];const isImg=rec&&rec.file_url&&/\.(jpg|jpeg|png|gif|webp|heic)$/i.test(rec.file_url);
+  h+=`<div class="card"><div class="row" style="align-items:flex-start;gap:12px"><div style="font-size:26px;line-height:1">${o.i}</div><div style="flex:1;min-width:0"><b>${o.t}</b>`;
+  if(rec){h+=` <span class="badge b-active">✓ uploaded</span>${rec.updated_at?`<div class="muted tiny" style="margin-top:3px">Uploaded ${fmtD(rec.updated_at)}</div>`:''}`;
+   if(isImg&&url)h+=`<img src="${url}" style="width:100%;max-height:240px;object-fit:cover;border-radius:10px;margin-top:9px;border:1px solid var(--line)" onclick="window.open('${url}','_blank')">`;
+   h+=`<a href="${url||'#'}" ${url?'target="_blank" rel="noopener"':'onclick="toast(\'Reopen this file to load the document\');return false"'} class="btn ghost sm" style="width:100%;text-decoration:none;margin-top:9px">${isImg?'Open full size / download':'Open document'}</a>`;
+  }else{h+=`<div class="muted tiny" style="margin-top:4px">Not uploaded yet</div>`;}
+  h+=`</div></div></div>`;});
+ if(id!==ME.id)h+=`<button class="btn ghost" style="margin-top:6px" onclick="manageMember('${id}')">⚙ Manage (reset PIN · role · remove)</button>`;
+ return h;
+}
+
 /* ---------- CREW ---------- */
 function vCrew(){
  let h=`<div class="h1">Crew</div><div class="sub">${D.members.length} ${D.members.length===1?'person':'people'}${isAdmin()?' · tap ＋ to add, tap a person to manage':''}</div>`;
- D.members.forEach(m=>{const can=isAdmin()&&m.id!==ME.id;h+=`<div class="member ${can?'tap':''}" ${can?`onclick="manageMember('${m.id}')"`:''}><div class="av">${initials(m.name)}</div><div style="flex:1"><b>${esc(m.name)}</b><div class="muted tiny">${m.role==='admin'?'Admin':'Employee'}</div></div>${m.id===ME.id?'<span class="badge b-soon">you</span>':(can?'<span class="muted">›</span>':'')}</div>`;});
+ D.members.forEach(m=>{const can=isAdmin();h+=`<div class="member ${can?'tap':''}" ${can?`onclick="openEmpFile('${m.id}')"`:''}><div class="av">${initials(m.name)}</div><div style="flex:1"><b>${esc(m.name)}</b><div class="muted tiny">${m.role==='admin'?'Admin':'Employee'}${isAdmin()?' · '+onbDoneCount(m.id)+'/'+ONB.length+' docs':''}</div></div>${m.id===ME.id?'<span class="badge b-soon">you</span>':(can?'<span class="muted">›</span>':'')}</div>`;});
  return h;
 }
 function newMember(){sheet(`<h3>Add crew member</h3><div class="field"><label>Name (their login)</label><input id="mn" placeholder="First name"></div><div class="field"><label>PIN (4–6 digits)</label><input id="mp" type="tel" inputmode="numeric" maxlength="6" placeholder="e.g. 4821"></div><div class="field"><label>Role</label><select id="mr"><option value="employee">Employee</option><option value="admin">Admin</option></select></div><button class="btn acc" onclick="addMember()">Add to crew</button><p class="muted tiny" style="text-align:center;margin-top:10px">They sign in with this name + PIN. Names must be unique.</p>`);}
