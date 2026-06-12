@@ -2,12 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#080808">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d0d0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="CCM Crew">
 <title>Complete Care Masonry</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="favicon-64.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--slate:#0d0d0d;--slate2:#1f1f1f;--bg:#eef0f2;--card:#fff;--line:#e0e3e7;--line2:#cdd2d8;
@@ -20,7 +26,6 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sans-se
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,textarea,select{font-family:inherit;font-size:16px}
 .muted{color:var(--mut)}.tiny{font-size:12px}
-/* appbar */
 .appbar{background:var(--slate);color:#fff;padding:calc(env(safe-area-inset-top) + 14px) 16px 14px;display:flex;align-items:center;gap:12px;flex-shrink:0;z-index:20}
 .wm{font-weight:800;font-size:15px;letter-spacing:.01em}.wm .o{color:var(--accent)}
 .appbar .sp{flex:1}
@@ -28,11 +33,13 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .chip.live{background:var(--green)}
 .rolepill{display:flex;align-items:center;gap:7px;background:var(--slate2);border-radius:99px;padding:6px 10px 6px 7px;font-size:12px;font-weight:600}
 .rolepill .av{width:24px;height:24px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-size:11px;font-weight:700}
+.netbar{background:#3a2a12;color:#ffd9a0;font-size:12px;font-weight:600;text-align:center;padding:6px 10px;flex-shrink:0;display:none}
+.netbar.on{display:block}
 .screen{flex:1;overflow-y:auto;padding:14px 14px 90px;-webkit-overflow-scrolling:touch}
 .h1{font-size:22px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--mut);font-size:13px;margin-bottom:14px}
 .row{display:flex;align-items:center;gap:10px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--sh);margin-bottom:12px;padding:15px}
-.card:active{transform:scale(.997)}
+.card.tap{cursor:pointer}.card.tap:active{transform:scale(.997)}
 .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;text-transform:uppercase}
 .b-active{background:var(--greenbg);color:#137a47}.b-soon{background:#e8eef5;color:#3a566f}
 .prog{height:8px;background:#eef1f4;border-radius:99px;overflow:hidden;margin:11px 0 8px}.prog i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:.4s}
@@ -47,22 +54,24 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .nav button.on{color:var(--accent)}.nav .ic{font-size:22px;line-height:1}
 .step{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:9px;display:flex;gap:12px;align-items:flex-start}
 .step.done{background:#f6faf7;border-color:#cfe9da}
-.chk{width:28px;height:28px;border-radius:8px;border:2px solid var(--line2);flex:0 0 28px;display:grid;place-items:center;font-size:16px;color:#fff}
+.chk{width:28px;height:28px;border-radius:8px;border:2px solid var(--line2);flex:0 0 28px;display:grid;place-items:center;font-size:16px;color:#fff;cursor:pointer}
 .step.done .chk{background:var(--green);border-color:var(--green)}
 .step .tx{font-size:15px;font-weight:500;line-height:1.35}.step.done .tx{color:var(--mut);text-decoration:line-through}
 .step .meta{font-size:11.5px;color:var(--mut);margin-top:5px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .reqp{font-size:10px;font-weight:700;color:var(--accent);background:#fbe6db;padding:2px 7px;border-radius:6px}
 .thumb{width:46px;height:46px;border-radius:8px;object-fit:cover;border:1px solid var(--line);margin-top:8px}
+.stepacts{margin-top:8px;display:flex;gap:14px;align-items:center}
+.stepacts button{font-size:12px;font-weight:700}
 .msg{max-width:82%;padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.4;margin-bottom:9px}
 .msg .who{font-size:11px;font-weight:700;margin-bottom:2px;color:var(--accent)}
 .msg.me{background:var(--slate);color:#fff;margin-left:auto;border-bottom-right-radius:4px}.msg.me .who{color:#f4a06a}
 .msg.them{background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
-.msg .tm{font-size:10px;color:var(--mut2);margin-top:3px}
+.msg .tm{font-size:10px;color:var(--mut2);margin-top:3px}.msg.pending{opacity:.55}
 .chatbar{position:absolute;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));max-width:540px;margin:0 auto;display:flex;gap:8px;padding:10px 12px;background:#fff;border-top:1px solid var(--line)}
 .chatbar input{flex:1;border:1px solid var(--line2);border-radius:22px;padding:11px 15px}
 .chatbar button{width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;font-size:18px;flex:0 0 44px}
 .member{display:flex;align-items:center;gap:12px;padding:13px;background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:9px}
-.member .av{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700}
+.member.tap{cursor:pointer}.member .av{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700}
 .stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;flex:1}.stat .n{font-size:26px;font-weight:800}.stat .l{font-size:11px;color:var(--mut);font-weight:600;text-transform:uppercase;margin-top:2px}
 .empty{text-align:center;color:var(--mut);padding:40px 20px;font-size:14px}
 .field{margin:12px 0}.field label{display:block;font-size:12px;font-weight:700;color:var(--mut);margin-bottom:6px;text-transform:uppercase}
@@ -71,7 +80,6 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .sheet.on{display:flex}
 .sheetcard{background:#fff;width:100%;max-width:540px;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:90vh;overflow-y:auto}
 .sheetcard h3{font-size:19px;font-weight:800;margin-bottom:4px}
-/* login */
 #login{position:fixed;inset:0;background:#080808;color:#fff;z-index:80;display:none;flex-direction:column;justify-content:center;padding:30px 24px calc(30px + env(safe-area-inset-bottom));max-width:540px;margin:0 auto;overflow-y:auto}
 #login.on{display:flex}
 #login .lwm{font-weight:800;font-size:24px;text-align:center}.lwm .o{color:var(--accent)}
@@ -79,6 +87,8 @@ input,textarea,select{font-family:inherit;font-size:16px}
 #login .field input{background:#151515;border:1.5px solid #2a2a2a;color:#fff}
 #login .note{text-align:center;color:#6a6a6a;font-size:12px;margin-top:18px;line-height:1.5}
 .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;background:#15171a;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:600;z-index:200;opacity:0;transition:.22s;pointer-events:none;max-width:90%;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.toast.on{opacity:1}.toast.err{background:var(--red)}.toast.ok{background:var(--green)}
 </style>
 </head>
 <body>
@@ -89,6 +99,7 @@ input,textarea,select{font-family:inherit;font-size:16px}
     <span class="chip" id="clockchip" onclick="go('today')">—</span>
     <button class="rolepill" onclick="logout()"><span class="av" id="meav">?</span><span id="mename">—</span></button>
   </div>
+  <div class="netbar" id="netbar"></div>
   <div class="screen" id="screen"><div class="empty">Loading…</div></div>
   <button class="fab" id="fab" style="display:none" onclick="onFab()">＋</button>
   <div class="nav" id="nav" style="display:none">
@@ -101,16 +112,17 @@ input,textarea,select{font-family:inherit;font-size:16px}
 
 <div id="login">
   <div class="lwm"><span class="o">COMPLETE CARE</span> MASONRY</div>
-  <div class="ltag">Crew app · sign in</div>
+  <div class="ltag">Crew app · sign in to start your day</div>
   <div style="max-width:360px;margin:0 auto;width:100%">
-    <div class="field"><label style="color:#9aa0a6">Your name</label><input id="lname" placeholder="e.g. Russ" autocomplete="off"></div>
-    <div class="field"><label style="color:#9aa0a6">4-digit PIN</label><input id="lpin" type="tel" inputmode="numeric" maxlength="6" placeholder="••••" autocomplete="off" onkeydown="if(event.key==='Enter')signIn()"></div>
+    <div class="field"><label style="color:#9aa0a6">Your name</label><input id="lname" placeholder="First name" autocomplete="off" autocapitalize="words"></div>
+    <div class="field"><label style="color:#9aa0a6">PIN</label><input id="lpin" type="password" inputmode="numeric" maxlength="6" placeholder="••••" autocomplete="off" onkeydown="if(event.key==='Enter')signIn()"></div>
     <button class="btn acc" id="lbtn" onclick="signIn()">Sign in ›</button>
     <p id="lerr" style="color:#df4b3a;font-size:13px;text-align:center;margin-top:10px;display:none"></p>
   </div>
-  <p class="note">First time? Just enter the name &amp; PIN your admin set for you.<br>Admin demo — name <b style="color:#fff">Russ</b>, PIN <b style="color:#fff">1234</b></p>
+  <p class="note">First time? Enter the name &amp; PIN your admin set up for you.</p>
 </div>
 <div class="sheet" id="sheet" onclick="if(event.target===this)closeSheet()"><div class="sheetcard" id="sheetcard"></div></div>
+<div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -118,29 +130,58 @@ const SB_URL='https://znkozmvqunobhhsfewej.supabase.co';
 const SB_KEY='sb_publishable_O1g53HbttlcHPQ2X3vmdZA_H9gj6-cH';
 const sb=window.supabase.createClient(SB_URL,SB_KEY);
 const emailFor=id=>id+'@ccmcrew.app';
-const pwFor=pin=>'CCM-'+pin;
+const pwFor=id=>'CCM7k-'+id;           // password derived from stable member id (NOT pin) so PIN resets don't break login
 const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials=n=>(n||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
 const fmtT=t=>new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
 const fmtD=t=>new Date(t).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
 
-let ME=null;           // {id,name,role}
+let ME=null;
 let D={jobs:[],tasks:[],comps:[],time:[],msgs:[],members:[]};
 let cur='jobs',curJob=null;
 const isAdmin=()=>ME&&ME.role==='admin';
+
+/* ---------- TOAST ---------- */
+let toT;function toast(m,type){const t=$('toast');t.textContent=m;t.className='toast on'+(type?(' '+type):'');clearTimeout(toT);toT=setTimeout(()=>t.className='toast',2600);}
+
+/* ---------- CONNECTION / OUTBOX ---------- */
+const OUT='ccm_outbox';
+const outbox=()=>{try{return JSON.parse(localStorage.getItem(OUT)||'[]');}catch(e){return[];}};
+const setOutbox=q=>localStorage.setItem(OUT,JSON.stringify(q));
+function enqueue(act){const q=outbox();q.push(act);setOutbox(q);updateNet();}
+function updateNet(){const b=$('netbar');if(!b)return;const off=!navigator.onLine;const n=outbox().length;
+ if(off){b.textContent=n?('Offline · '+n+' change'+(n>1?'s':'')+' will sync when you reconnect'):'Offline — you can still work; changes sync later';b.classList.add('on');}
+ else if(n){b.textContent='Syncing '+n+' change'+(n>1?'s':'')+'…';b.classList.add('on');}
+ else b.classList.remove('on');}
+async function runAct(a){const t=sb.from(a.table);
+ if(a.op==='insert')return t.insert(a.payload);
+ if(a.op==='update')return t.update(a.payload).eq(a.match.col,a.match.val);
+ if(a.op==='delete')return t.delete().eq(a.match.col,a.match.val);}
+async function flush(){let q=outbox();if(!q.length){updateNet();return;}const left=[];for(const a of q){try{const r=await runAct(a);if(r&&r.error)left.push(a);}catch(e){left.push(a);}}setOutbox(left);updateNet();if(q.length&&!left.length)toast('Synced','ok');if(navigator.onLine)loadAll();}
+// mutate: run now if online; queue if offline or network drops. RLS/logic errors are surfaced, not queued.
+async function mutate(act){
+ if(!navigator.onLine){enqueue(act);toast('Saved offline — will sync','ok');return{queued:true};}
+ try{const r=await runAct(act);if(r&&r.error){toast(r.error.message||'Save failed','err');return{error:r.error};}return{ok:true};}
+ catch(e){enqueue(act);toast('Saved offline — will sync','ok');return{queued:true};}
+}
+window.addEventListener('online',()=>{updateNet();flush();});
+window.addEventListener('offline',updateNet);
 
 /* ---------- AUTH ---------- */
 async function signIn(){
  const name=$('lname').value.trim(), pin=$('lpin').value.trim();
  const err=$('lerr'),btn=$('lbtn');
- if(!name||pin.length<4){err.style.display='block';err.textContent='Enter your name and 4-digit PIN.';return;}
+ if(!name||pin.length<4){err.style.display='block';err.textContent='Enter your name and PIN (4+ digits).';return;}
+ if(!navigator.onLine){err.style.display='block';err.textContent='You need a connection to sign in the first time.';return;}
  btn.disabled=true;btn.innerHTML='<span class="spin"></span>';err.style.display='none';
  try{
   const {data,error}=await sb.rpc('lookup_member',{p_name:name,p_pin:pin});
   if(error)throw error;
   const row=data&&data[0];
-  if(!row){throw new Error("That name + PIN isn't recognized. Ask your admin.");}
-  const email=emailFor(row.member_id), pw=pwFor(pin);
+  if(row&&row.locked)throw new Error('Too many attempts. Wait ~10 minutes and try again.');
+  if(!row||!row.member_id)throw new Error("That name + PIN isn't recognized. Ask your admin.");
+  const email=emailFor(row.member_id), pw=pwFor(row.member_id);
   if(!row.claimed){
    const su=await sb.auth.signUp({email,password:pw});
    if(su.error && !/already registered/i.test(su.error.message))throw su.error;
@@ -149,137 +190,179 @@ async function signIn(){
    await sb.rpc('claim_member',{p_member_id:row.member_id,p_pin:pin});
   }else{
    const si=await sb.auth.signInWithPassword({email,password:pw});
-   if(si.error)throw new Error('Wrong PIN.');
+   if(si.error)throw new Error('Sign-in failed. Ask your admin to reset your PIN.');
   }
   await afterLogin();
  }catch(e){err.style.display='block';err.textContent=e.message||'Sign-in failed.';}
  btn.disabled=false;btn.textContent='Sign in ›';
 }
+function mountUI(){$('login').classList.remove('on');$('nav').style.display='flex';$('mename').textContent=ME.name;$('meav').textContent=initials(ME.name);}
 async function afterLogin(){
  const {data:{session}}=await sb.auth.getSession();
  if(!session){showLogin();return;}
+ if(!navigator.onLine){const m=cacheGet('ccm_me');if(m){ME=m;mountUI();restoreD();render();updateNet();return;}}
  const {data:m}=await sb.from('members').select('*').eq('auth_id',session.user.id).maybeSingle();
  if(!m){showLogin();return;}
- ME={id:m.id,name:m.name,role:m.role};
- $('login').classList.remove('on');$('nav').style.display='flex';
- $('mename').textContent=ME.name;$('meav').textContent=initials(ME.name);
- await loadAll();subscribe();go('jobs');
+ ME={id:m.id,name:m.name,role:m.role};localStorage.setItem('ccm_me',JSON.stringify(ME));
+ mountUI();await loadAll();subscribe();go('jobs');flush();
 }
 function showLogin(){$('login').classList.add('on');$('nav').style.display='none';$('fab').style.display='none';}
-async function logout(){await sb.auth.signOut();ME=null;$('lname').value='';$('lpin').value='';showLogin();}
+async function logout(){try{await sb.auth.signOut();}catch(e){}ME=null;localStorage.removeItem('ccm_me');$('lname').value='';$('lpin').value='';showLogin();}
 
 /* ---------- DATA ---------- */
-async function loadAll(){
- const [jobs,tasks,comps,time,msgs,members]=await Promise.all([
-  sb.from('jobs').select('*').order('created_at',{ascending:false}),
-  sb.from('tasks').select('*').order('position'),
-  sb.from('task_completions').select('*'),
-  sb.from('time_entries').select('*').order('clock_in',{ascending:false}),
-  sb.from('messages').select('*').order('created_at'),
-  sb.from('members').select('id,name,role'),
- ]);
- D={jobs:jobs.data||[],tasks:tasks.data||[],comps:comps.data||[],time:time.data||[],msgs:msgs.data||[],members:members.data||[]};
- render();updateClock();
+const cacheGet=k=>{try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}};
+function cacheD(){try{localStorage.setItem('ccm_cache',JSON.stringify(D));}catch(e){}}
+function restoreD(){const c=cacheGet('ccm_cache');if(c)D=c;}
+async function loadAll(opt={}){
+ const preserve=opt.preserve!==false;
+ if(!navigator.onLine){restoreD();preserve?renderSafe():render();updateClock();updateNet();return;}
+ try{
+  const [jobs,tasks,comps,time,msgs,crew]=await Promise.all([
+   sb.from('jobs').select('*').order('created_at',{ascending:false}),
+   sb.from('tasks').select('*').order('position'),
+   sb.from('task_completions').select('*'),
+   sb.from('time_entries').select('*').order('clock_in',{ascending:false}),
+   sb.from('messages').select('*').order('created_at'),
+   sb.rpc('list_crew'),
+  ]);
+  D={jobs:jobs.data||[],tasks:tasks.data||[],comps:comps.data||[],time:time.data||[],msgs:msgs.data||[],members:crew.data||[]};
+  cacheD();
+ }catch(e){restoreD();}
+ preserve?renderSafe():render();updateClock();updateNet();
 }
-let subbed=false;
+let subbed=false,rtT=null;
 function subscribe(){if(subbed)return;subbed=true;
- sb.channel('ccm').on('postgres_changes',{event:'*',schema:'public'},()=>{loadAll();}).subscribe();}
+ sb.channel('ccm').on('postgres_changes',{event:'*',schema:'public'},()=>{clearTimeout(rtT);rtT=setTimeout(()=>loadAll({preserve:true}),350);}).subscribe();}
 const memberName=id=>{const m=D.members.find(x=>x.id===id);return m?m.name:'—';};
 const compFor=tid=>D.comps.find(c=>c.task_id===tid);
 const myOpenShift=()=>D.time.find(t=>t.member_id===ME.id&&!t.clock_out);
 
-/* ---------- ROUTER ---------- */
-function go(s){cur=s;curJob=null;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));render();$('screen').scrollTop=0;}
-function openJob(id){cur='job';curJob=id;render();}
-function render(){
- if(!ME)return;
- $('fab').style.display=((cur==='jobs'||cur==='crew')&&isAdmin())?'grid':'none';
- const el=$('screen');
+/* ---------- ROUTER / RENDER ---------- */
+function go(s){if(cur==='chat'&&s!=='chat')clearChatbar();cur=s;curJob=null;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));render();$('screen').scrollTop=0;if(s==='chat')scrollChatBottom();}
+function openJob(id){if(cur==='chat')clearChatbar();cur='job';curJob=id;render();$('screen').scrollTop=0;}
+function fabState(){$('fab').style.display=((cur==='jobs'||cur==='crew')&&isAdmin())?'grid':'none';}
+function paint(){const el=$('screen');
  if(cur==='jobs')el.innerHTML=vJobs();
  else if(cur==='job')el.innerHTML=vJob(curJob);
  else if(cur==='today')el.innerHTML=vToday();
  else if(cur==='crew')el.innerHTML=vCrew();
- else if(cur==='chat'){el.innerHTML=vChat();setTimeout(()=>{const c=$('screen');c.scrollTop=c.scrollHeight;},30);}
- updateClock();
+ else if(cur==='chat')el.innerHTML=vChat();
 }
+function render(){if(!ME)return;paint();fabState();updateClock();if(cur==='chat')scrollChatBottom();}
+function renderSafe(){if(!ME)return;
+ const a=document.activeElement,id=a&&a.id,v=a&&('value'in a)?a.value:null,s0=a&&a.selectionStart,s1=a&&a.selectionEnd;
+ const sc=$('screen').scrollTop;
+ paint();fabState();updateClock();
+ if(id){const n=$(id);if(n){try{n.focus();if(v!=null&&('value'in n)){n.value=v;if(s0!=null&&n.setSelectionRange)n.setSelectionRange(s0,s1);}}catch(e){}}}
+ $('screen').scrollTop=sc;
+ if(cur==='chat'&&!id)scrollChatBottom();
+}
+function scrollChatBottom(){setTimeout(()=>{const c=$('screen');if(c)c.scrollTop=c.scrollHeight;},30);}
 function jobProg(jid){const ts=D.tasks.filter(t=>t.job_id===jid);if(!ts.length)return 0;const done=ts.filter(t=>compFor(t.id)).length;return Math.round(done/ts.length*100);}
 
 /* ---------- JOBS ---------- */
 function vJobs(){
  let h=`<div class="h1">${isAdmin()?'Jobs':'My Jobs'}</div><div class="sub">${D.jobs.length} job${D.jobs.length===1?'':'s'} · tap to see the steps</div>`;
- if(!isAdmin()&&!myOpenShift()&&D.jobs.length)h+=`<div class="card" style="border:1.5px solid var(--accent)"><div class="row"><div style="flex:1"><b>Start your day</b><div class="muted tiny">Clock in when you reach the site.</div></div><button class="btn green sm" onclick="go('today')">Clock in</button></div>`;
+ if(!isAdmin()&&!myOpenShift()&&D.jobs.length)h+=`<div class="card"><div class="row"><div style="flex:1"><b>Start your day</b><div class="muted tiny">Clock in when you reach the site.</div></div><button class="btn green sm" onclick="go('today')">Clock in</button></div></div>`;
  if(!D.jobs.length)h+=`<div class="empty">${isAdmin()?'No jobs yet. Tap ＋ to add one.':'No jobs assigned yet.'}</div>`;
  D.jobs.forEach(j=>{const p=jobProg(j.id);
-  h+=`<div class="card" onclick="openJob('${j.id}')"><div class="row"><div style="flex:1"><div class="jt">${j.title}</div><div class="jad">${j.address||''}</div></div><span class="badge b-active">${j.status||'active'}</span></div><div class="prog"><i style="width:${p}%"></i></div><div class="muted tiny">${p}% complete · ${D.tasks.filter(t=>t.job_id===j.id).length} steps</div></div>`;});
+  h+=`<div class="card tap" onclick="openJob('${j.id}')"><div class="row"><div style="flex:1"><div class="jt">${esc(j.title)}</div><div class="jad">${esc(j.address||'')}</div></div><span class="badge b-active">${esc(j.status||'active')}</span></div><div class="prog"><i style="width:${p}%"></i></div><div class="muted tiny">${p}% complete · ${D.tasks.filter(t=>t.job_id===j.id).length} steps</div></div>`;});
  return h;
 }
 /* ---------- JOB DETAIL ---------- */
 function vJob(jid){
  const j=D.jobs.find(x=>x.id===jid);if(!j)return '<div class="empty">Job not found.</div>';
  const ts=D.tasks.filter(t=>t.job_id===jid),p=jobProg(jid);
- let h=`<button class="btn ghost sm" style="margin-bottom:10px" onclick="go('jobs')">‹ All jobs</button><div class="h1">${j.title}</div><div class="sub">${j.address||''} ${j.client?'· '+j.client:''}</div>
+ let h=`<button class="btn ghost sm" style="margin-bottom:10px" onclick="go('jobs')">‹ All jobs</button><div class="h1">${esc(j.title)}</div><div class="sub">${esc(j.address||'')} ${j.client?'· '+esc(j.client):''}</div>
  <div class="card"><div class="row" style="justify-content:space-between"><b>${p}% complete</b><span class="muted tiny">${ts.length} steps</span></div><div class="prog"><i style="width:${p}%"></i></div></div>`;
  if(isAdmin())h+=`<div class="row" style="gap:8px;margin-bottom:12px"><button class="btn acc sm" style="flex:1" onclick="voiceSteps('${jid}')">🎙 Talk in steps</button><button class="btn ghost sm" style="flex:1" onclick="addTask('${jid}')">＋ Add step</button></div>`;
  if(!ts.length)h+=`<div class="empty">No steps yet.${isAdmin()?' Add the checklist.':''}</div>`;
- ts.forEach(t=>{const c=compFor(t.id);
-  h+=`<div class="step ${c?'done':''}"><div class="chk" onclick="toggleTask('${t.id}',${t.require_photo})">${c?'✓':''}</div><div style="flex:1;min-width:0"><div class="tx">${t.text}</div><div class="meta">${t.require_photo?'<span class="reqp">📷 photo</span>':''}${c?`<span>✓ ${memberName(c.member_id)} · ${fmtT(c.done_at)}</span>`:''}</div>${c&&c.photo_url?`<img class="thumb" src="${c.photo_url}">`:''}<div style="margin-top:7px"><button class="tiny" style="font-weight:700;color:var(--red)" onclick="flagTask('${t.id}')">⚑ Flag issue</button></div></div></div>`;});
- // job chat
+ ts.forEach((t,i)=>{const c=compFor(t.id);
+  h+=`<div class="step ${c?'done':''}"><div class="chk" onclick="toggleTask('${t.id}',${t.require_photo?1:0})">${c?'✓':''}</div><div style="flex:1;min-width:0"><div class="tx">${esc(t.text)}</div><div class="meta">${t.require_photo?'<span class="reqp">📷 photo</span>':''}${c?`<span>✓ ${esc(memberName(c.member_id))} · ${fmtT(c.done_at)}</span>`:''}</div>${c&&c.photo_url?`<img class="thumb" src="${esc(c.photo_url)}" onclick="viewPhoto('${esc(c.photo_url)}')">`:''}
+   <div class="stepacts"><button style="color:var(--red)" onclick="flagTask('${t.id}')">⚑ Flag issue</button>${isAdmin()?`<button class="muted" onclick="editTask('${t.id}')">✎ Edit</button><button class="muted" onclick="moveTask('${t.id}',-1)" ${i===0?'disabled style=\"opacity:.3\"':''}>↑</button><button class="muted" onclick="moveTask('${t.id}',1)" ${i===ts.length-1?'disabled style=\"opacity:.3\"':''}>↓</button><button class="muted" onclick="delTask('${t.id}')">🗑</button>`:''}</div></div></div>`;});
  h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;color:var(--slate);margin:14px 2px 8px">Job chat</div>`;
- D.msgs.filter(m=>m.job_id===jid).slice(-6).forEach(m=>{const fl=m.body.startsWith('⚑');h+=`<div class="msg ${m.member_id===ME.id?'me':'them'}" style="${fl?'border-left:4px solid var(--red)':''}"><div class="who">${memberName(m.member_id)}</div>${m.body}<div class="tm">${fmtT(m.created_at)}</div></div>`;});
+ D.msgs.filter(m=>m.job_id===jid).slice(-8).forEach(m=>{const fl=(m.body||'').startsWith('⚑');h+=`<div class="msg ${m.member_id===ME.id?'me':'them'} ${String(m.id).startsWith('tmp')?'pending':''}" style="${fl?'border-left:4px solid var(--red)':''}"><div class="who">${esc(memberName(m.member_id))}</div>${esc(m.body)}<div class="tm">${fmtT(m.created_at)}</div></div>`;});
  h+=`<div class="row" style="gap:8px;margin-top:8px"><input id="jmsg" placeholder="Message the crew…" style="flex:1;border:1px solid var(--line2);border-radius:22px;padding:11px 15px" onkeydown="if(event.key==='Enter')sendMsg('${jid}')"><button class="btn acc" style="width:46px;height:46px;border-radius:50%;flex:0 0 46px" onclick="sendMsg('${jid}')">➤</button></div>`;
  if(isAdmin())h+=`<div style="text-align:center;margin-top:22px"><button class="tiny muted" style="text-decoration:underline" onclick="deleteJob('${jid}')">Delete this job</button></div>`;
  return h;
 }
+function viewPhoto(url){sheet(`<h3>Photo</h3><img src="${esc(url)}" style="width:100%;border-radius:12px;margin-top:8px">`);}
 async function toggleTask(tid,reqPhoto){
  const c=compFor(tid);
- if(c){ if(isAdmin()){await sb.from('task_completions').delete().eq('id',c.id);loadAll();} return; }
- if(reqPhoto){return completeWithPhoto(tid);}
- await sb.from('task_completions').insert({task_id:tid,member_id:ME.id});loadAll();
+ if(c){
+  if(c.member_id===ME.id||isAdmin()){
+   D.comps=D.comps.filter(x=>x.id!==c.id);renderSafe();
+   const r=await mutate({table:'task_completions',op:'delete',match:{col:'id',val:c.id}});
+   if(r.error){loadAll();}
+  }else toast('Only the person who checked it (or an admin) can undo it');
+  return;
+ }
+ if(reqPhoto)return completeWithPhoto(tid);
+ const tmp={id:'tmp'+Date.now(),task_id:tid,member_id:ME.id,done_at:new Date().toISOString()};
+ D.comps.push(tmp);renderSafe();
+ const r=await mutate({table:'task_completions',op:'insert',payload:{task_id:tid,member_id:ME.id}});
+ if(r.error){D.comps=D.comps.filter(x=>x.id!==tmp.id);renderSafe();}
+ else if(r.ok)loadAll();
 }
 function completeWithPhoto(tid){
+ if(!navigator.onLine){toast('Photo steps need a connection','err');return;}
  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.capture='environment';
- inp.onchange=e=>{const f=e.target.files[0];if(!f)return;resizeImg(f,async blob=>{
-   const path=ME.id+'/'+tid+'-'+Date.now()+'.jpg';
-   const up=await sb.storage.from('task-photos').upload(path,blob,{contentType:'image/jpeg'});
-   let url=null; if(!up.error){url=sb.storage.from('task-photos').getPublicUrl(path).data.publicUrl;}
-   await sb.from('task_completions').insert({task_id:tid,member_id:ME.id,photo_url:url});loadAll();
+ inp.onchange=e=>{const f=e.target.files[0];if(!f)return;toast('Uploading photo…');resizeImg(f,async blob=>{
+   try{
+    const path=ME.id+'/'+tid+'-'+Date.now()+'.jpg';
+    const up=await sb.storage.from('task-photos').upload(path,blob,{contentType:'image/jpeg'});
+    if(up.error){toast('Photo upload failed','err');return;}
+    const url=sb.storage.from('task-photos').getPublicUrl(path).data.publicUrl;
+    const ins=await sb.from('task_completions').insert({task_id:tid,member_id:ME.id,photo_url:url});
+    if(ins.error){toast(ins.error.message,'err');return;}
+    toast('Done ✓','ok');loadAll();
+   }catch(err){toast('Photo upload failed','err');}
  });};
  inp.click();
 }
 function addTask(jid){sheet(`<h3>Add step</h3><div class="field"><label>Step</label><input id="ts" placeholder="e.g. Compact base, 4&quot; stone"></div><label class="row" style="gap:8px;font-weight:600"><input type="checkbox" id="trq" style="width:20px;height:20px"> Require a photo to check off</label><button class="btn acc" style="margin-top:14px" onclick="saveTask('${jid}')">Add step</button>`);}
-async function saveTask(jid){const t=$('ts').value.trim();if(!t)return;const pos=D.tasks.filter(x=>x.job_id===jid).length;await sb.from('tasks').insert({job_id:jid,text:t,require_photo:$('trq').checked,position:pos});closeSheet();loadAll();}
-async function sendMsg(jid){const i=$('jmsg');const v=i.value.trim();if(!v)return;i.value='';await sb.from('messages').insert({member_id:ME.id,job_id:jid,body:v});loadAll();}
+async function saveTask(jid){const t=$('ts').value.trim();if(!t)return;const rq=$('trq').checked;const pos=D.tasks.filter(x=>x.job_id===jid).length;closeSheet();const r=await mutate({table:'tasks',op:'insert',payload:{job_id:jid,text:t,require_photo:rq,position:pos}});if(r.ok||r.queued)loadAll();}
+function editTask(tid){const t=D.tasks.find(x=>x.id===tid);if(!t)return;sheet(`<h3>Edit step</h3><div class="field"><label>Step</label><input id="ets" value="${esc(t.text)}"></div><label class="row" style="gap:8px;font-weight:600"><input type="checkbox" id="etrq" ${t.require_photo?'checked':''} style="width:20px;height:20px"> Require a photo to check off</label><button class="btn acc" style="margin-top:14px" onclick="saveEdit('${tid}')">Save</button>`);}
+async function saveEdit(tid){const v=$('ets').value.trim();if(!v)return;const rq=$('etrq').checked;closeSheet();const r=await mutate({table:'tasks',op:'update',payload:{text:v,require_photo:rq},match:{col:'id',val:tid}});if(r.ok||r.queued)loadAll();}
+async function moveTask(tid,dir){const t=D.tasks.find(x=>x.id===tid);if(!t)return;const sib=D.tasks.filter(x=>x.job_id===t.job_id).sort((a,b)=>a.position-b.position);const i=sib.findIndex(x=>x.id===tid);const j=i+dir;if(j<0||j>=sib.length)return;const other=sib[j];const pa=t.position,pb=other.position;await mutate({table:'tasks',op:'update',payload:{position:pb},match:{col:'id',val:t.id}});await mutate({table:'tasks',op:'update',payload:{position:pa},match:{col:'id',val:other.id}});loadAll();}
+async function delTask(tid){if(!confirm('Delete this step?'))return;const r=await mutate({table:'tasks',op:'delete',match:{col:'id',val:tid}});if(r.ok||r.queued)loadAll();}
+async function sendMsg(jid){const i=$('jmsg');if(!i)return;const v=i.value.trim();if(!v)return;i.value='';
+ const tmp={id:'tmp'+Date.now(),member_id:ME.id,job_id:jid,body:v,created_at:new Date().toISOString()};D.msgs.push(tmp);renderSafe();scrollChatBottom();
+ const r=await mutate({table:'messages',op:'insert',payload:{member_id:ME.id,job_id:jid,body:v}});
+ if(r.error){D.msgs=D.msgs.filter(x=>x.id!==tmp.id);renderSafe();}else if(r.ok)loadAll();}
 
 /* ---------- VOICE → STEPS ---------- */
 function parseSteps(t){return t.replace(/\b(\d+)[\).]/g,'\n').split(/\n|(?:\.\s)|(?:,?\s*(?:and then|then|after that|next,?)\s+)/i).map(s=>s.trim().replace(/^[-•\s]+/,'')).filter(s=>s.length>2).map(s=>s.charAt(0).toUpperCase()+s.slice(1));}
 let vrec=null,vlisten=false;
 function voiceSteps(jid){sheet(`<h3>🎙 Talk in the steps</h3><p class="muted tiny">Describe the job out loud, start to finish. Say "next" or "then" between steps.</p><button class="btn ghost" id="micb" style="margin:12px 0" onclick="toggleVoice()">🎙 Tap to start talking</button><div class="field"><label>Steps (edit if needed)</label><textarea id="vtx" style="min-height:120px" placeholder="…or type one per line"></textarea></div><button class="btn acc" onclick="commitVoice('${jid}')">Create steps</button>`);}
 function toggleVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;const b=$('micb');if(!SR){b.textContent='Voice not supported here — type below';return;}if(vlisten){vrec&&vrec.stop();return;}vrec=new SR();vrec.lang='en-US';vrec.continuous=true;vrec.interimResults=true;let fin=$('vtx').value;vrec.onstart=()=>{vlisten=true;b.textContent='● Listening… tap to stop';b.style.color='var(--red)';};vrec.onend=()=>{vlisten=false;b.textContent='🎙 Tap to start talking';b.style.color='';};vrec.onresult=e=>{let it='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)fin+=t+' ';else it+=t;}if($('vtx'))$('vtx').value=fin+it;};try{vrec.start();}catch(e){}}
-async function commitVoice(jid){if(vrec&&vlisten)vrec.stop();const steps=parseSteps(($('vtx')||{}).value||'');if(!steps.length)return;let pos=D.tasks.filter(t=>t.job_id===jid).length;const rows=steps.map(s=>({job_id:jid,text:s,position:pos++}));await sb.from('tasks').insert(rows);closeSheet();loadAll();}
+async function commitVoice(jid){if(vrec&&vlisten)vrec.stop();const steps=parseSteps(($('vtx')||{}).value||'');if(!steps.length){toast('Add at least one step');return;}let pos=D.tasks.filter(t=>t.job_id===jid).length;const rows=steps.map(s=>({job_id:jid,text:s,position:pos++}));closeSheet();const r=await mutate({table:'tasks',op:'insert',payload:rows});if(r.ok||r.queued){toast(steps.length+' steps added','ok');loadAll();}}
 
 /* ---------- FLAG ISSUE ---------- */
-function flagTask(tid){const t=D.tasks.find(x=>x.id===tid);if(!t)return;sheet(`<h3>Flag an issue</h3><p class="muted tiny">${t.text}</p><div class="field"><textarea id="ftx" placeholder="What's the problem? (e.g. ran out of block, hitting roots)"></textarea></div><button class="btn red" onclick="saveFlag('${t.id}')">Send to admin</button>`);}
-async function saveFlag(tid){const t=D.tasks.find(x=>x.id===tid);const v=$('ftx').value.trim();if(!v||!t)return;await sb.from('messages').insert({member_id:ME.id,job_id:t.job_id,body:'⚑ ISSUE — '+t.text+': '+v});closeSheet();loadAll();}
+function flagTask(tid){const t=D.tasks.find(x=>x.id===tid);if(!t)return;sheet(`<h3>Flag an issue</h3><p class="muted tiny">${esc(t.text)}</p><div class="field"><textarea id="ftx" placeholder="What's the problem? (e.g. ran out of block, hitting roots)"></textarea></div><button class="btn red" onclick="saveFlag('${t.id}')">Send to admin</button>`);}
+async function saveFlag(tid){const t=D.tasks.find(x=>x.id===tid);const v=$('ftx').value.trim();if(!v||!t)return;closeSheet();const r=await mutate({table:'messages',op:'insert',payload:{member_id:ME.id,job_id:t.job_id,body:'⚑ ISSUE — '+t.text+': '+v}});if(r.ok||r.queued){toast('Sent to admin','ok');loadAll();}}
 
 /* ---------- DELETE JOB ---------- */
-async function deleteJob(jid){if(!confirm('Delete this job and all its steps? This cannot be undone.'))return;await sb.from('jobs').delete().eq('id',jid);go('jobs');loadAll();}
+async function deleteJob(jid){if(!confirm('Delete this job and all its steps? This cannot be undone.'))return;const r=await mutate({table:'jobs',op:'delete',match:{col:'id',val:jid}});if(r.ok||r.queued){go('jobs');loadAll();}}
 
 /* ---------- END-OF-DAY RECAP ---------- */
 function recap(){const ts=new Date().setHours(0,0,0,0);
  const done=D.comps.filter(c=>new Date(c.done_at)>=ts);
- const flags=D.msgs.filter(m=>new Date(m.created_at)>=ts&&m.body.startsWith('⚑'));
+ const flags=D.msgs.filter(m=>new Date(m.created_at)>=ts&&(m.body||'').startsWith('⚑'));
  const photos=done.filter(c=>c.photo_url).length;
  const taskText=id=>{const t=D.tasks.find(x=>x.id===id);return t?t.text:'(step)';};
  const hrs={};D.time.filter(t=>new Date(t.clock_in)>=ts).forEach(t=>{const n=memberName(t.member_id);hrs[n]=(hrs[n]||0)+((new Date(t.clock_out||Date.now())-new Date(t.clock_in))/3600000);});
  sheet(`<h3>End-of-day recap</h3><p class="muted tiny">${fmtD(Date.now())}</p>
-  <div style="margin-top:12px"><b>✅ Completed (${done.length})</b>${done.length?'<div style="font-size:14px;margin-top:5px;line-height:1.7">'+done.map(c=>'• '+taskText(c.task_id)+' — '+memberName(c.member_id)).join('<br>')+'</div>':'<div class="muted tiny">Nothing checked off yet.</div>'}</div>
-  <div style="margin-top:14px"><b style="color:var(--red)">⚑ Issues (${flags.length})</b>${flags.length?'<div style="font-size:14px;margin-top:5px;line-height:1.7;color:var(--red)">'+flags.map(f=>'• '+f.body.replace('⚑ ISSUE — ','')).join('<br>')+'</div>':'<div class="muted tiny">None flagged.</div>'}</div>
-  <div style="margin-top:14px"><b>⏱ Hours</b>${Object.keys(hrs).length?'<div style="font-size:14px;margin-top:5px;line-height:1.7">'+Object.entries(hrs).map(([n,h])=>'• '+n+': '+h.toFixed(1)+'h').join('<br>')+'</div>':'<div class="muted tiny">No hours logged.</div>'}</div>
+  <div style="margin-top:12px"><b>✅ Completed (${done.length})</b>${done.length?'<div style="font-size:14px;margin-top:5px;line-height:1.7">'+done.map(c=>'• '+esc(taskText(c.task_id))+' — '+esc(memberName(c.member_id))).join('<br>')+'</div>':'<div class="muted tiny">Nothing checked off yet.</div>'}</div>
+  <div style="margin-top:14px"><b style="color:var(--red)">⚑ Issues (${flags.length})</b>${flags.length?'<div style="font-size:14px;margin-top:5px;line-height:1.7;color:var(--red)">'+flags.map(f=>'• '+esc(f.body.replace('⚑ ISSUE — ',''))).join('<br>')+'</div>':'<div class="muted tiny">None flagged.</div>'}</div>
+  <div style="margin-top:14px"><b>⏱ Hours</b>${Object.keys(hrs).length?'<div style="font-size:14px;margin-top:5px;line-height:1.7">'+Object.entries(hrs).map(([n,h])=>'• '+esc(n)+': '+h.toFixed(1)+'h').join('<br>')+'</div>':'<div class="muted tiny">No hours logged.</div>'}</div>
   <div style="margin-top:14px"><b>📷 Photos captured:</b> ${photos}</div>`);}
 
 /* ---------- NEW JOB ---------- */
 function newJob(){sheet(`<h3>New job</h3><div class="field"><label>Title</label><input id="njt" placeholder="e.g. Retaining Wall — 12 Oak St"></div><div class="field"><label>Address</label><input id="nja" placeholder="Street, town"></div><div class="field"><label>Client</label><input id="njc" placeholder="Homeowner"></div><button class="btn acc" onclick="createJob()">Create job</button>`);}
-async function createJob(){const t=$('njt').value.trim();if(!t)return;const {data}=await sb.from('jobs').insert({title:t,address:$('nja').value.trim(),client:$('njc').value.trim()}).select().single();closeSheet();await loadAll();if(data)openJob(data.id);}
+async function createJob(){const t=$('njt').value.trim();if(!t){toast('Add a title');return;}const payload={title:t,address:$('nja').value.trim(),client:$('njc').value.trim()};closeSheet();
+ if(!navigator.onLine){enqueue({table:'jobs',op:'insert',payload});toast('Saved offline — will sync','ok');return;}
+ const {data,error}=await sb.from('jobs').insert(payload).select().single();if(error){toast(error.message,'err');return;}await loadAll();if(data)openJob(data.id);}
 
 /* ---------- TODAY / CLOCK ---------- */
 function vToday(){
@@ -287,59 +370,72 @@ function vToday(){
  const tStart=new Date().setHours(0,0,0,0);
  const mine=D.time.filter(t=>t.member_id===ME.id&&new Date(t.clock_in)>=tStart);
  const mins=mine.reduce((a,c)=>a+((new Date(c.clock_out||Date.now())-new Date(c.clock_in))/60000),0);
- let h=`<div class="h1">Today</div><div class="sub">${fmtD(Date.now())}</div>
- <div class="row" style="gap:10px;margin-bottom:14px"><div class="stat"><div class="n">${(mins/60).toFixed(1)}</div><div class="l">Your hours today</div></div></div>`;
- if(open){const j=D.jobs.find(x=>x.id===open.job_id);h+=`<div class="card" style="border:2px solid var(--green)"><div class="row"><span class="badge b-active">● On the clock</span></div><div class="muted tiny" style="margin:8px 0 12px">Since ${fmtT(open.clock_in)} · ${j?j.title:''}</div><button class="btn red" onclick="clockOut()">Clock out</button></div>`;}
- else{h+=`<div class="card"><div class="field"><label>Which job?</label><select id="cjob">${D.jobs.map(j=>`<option value="${j.id}">${j.title}</option>`).join('')||'<option value="">No jobs</option>'}</select></div><button class="btn green" onclick="clockIn()">Clock in</button></div>`;}
+ let h=`<div class="h1">Today</div><div class="sub">${fmtD(Date.now())}</div>`;
+ if(open){const longShift=(Date.now()-new Date(open.clock_in))>10*3600000;if(longShift)h+=`<div class="card" style="border:1.5px solid var(--amber)"><b style="color:var(--amber)">Still on the clock</b><div class="muted tiny" style="margin-top:3px">You've been clocked in over 10 hours — clock out if your shift ended.</div></div>`;}
+ h+=`<div class="row" style="gap:10px;margin-bottom:14px"><div class="stat"><div class="n">${(mins/60).toFixed(1)}</div><div class="l">Your hours today</div></div></div>`;
+ if(open){const j=D.jobs.find(x=>x.id===open.job_id);h+=`<div class="card" style="border:2px solid var(--green)"><div class="row"><span class="badge b-active">● On the clock</span></div><div class="muted tiny" style="margin:8px 0 12px">Since ${fmtT(open.clock_in)} · ${j?esc(j.title):''}</div><button class="btn red" onclick="clockOut()">Clock out</button></div>`;}
+ else{h+=`<div class="card"><div class="field"><label>Which job?</label><select id="cjob">${D.jobs.map(j=>`<option value="${j.id}">${esc(j.title)}</option>`).join('')||'<option value="">No jobs</option>'}</select></div><button class="btn green" onclick="clockIn()">Clock in</button></div>`;}
  h+=`<button class="btn ghost" style="margin-top:8px" onclick="recap()">📋 End-of-day recap</button>`;
  if(isAdmin()){
   h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;color:var(--slate);margin:18px 2px 8px">Crew hours today</div>`;
-  D.members.forEach(m=>{const ts=D.time.filter(t=>t.member_id===m.id&&new Date(t.clock_in)>=tStart);const mn=ts.reduce((a,c)=>a+((new Date(c.clock_out||Date.now())-new Date(c.clock_in))/60000),0);const on=ts.some(t=>!t.clock_out);
-   if(mn>0||on)h+=`<div class="member"><div class="av">${initials(m.name)}</div><div style="flex:1"><b>${m.name}</b><div class="muted tiny">${(mn/60).toFixed(1)}h today</div></div>${on?'<span class="badge b-active">on clock</span>':''}</div>`;});
+  let any=false;
+  D.members.forEach(m=>{const tt=D.time.filter(t=>t.member_id===m.id&&new Date(t.clock_in)>=tStart);const mn=tt.reduce((a,c)=>a+((new Date(c.clock_out||Date.now())-new Date(c.clock_in))/60000),0);const on=tt.some(t=>!t.clock_out);
+   if(mn>0||on){any=true;h+=`<div class="member"><div class="av">${initials(m.name)}</div><div style="flex:1"><b>${esc(m.name)}</b><div class="muted tiny">${(mn/60).toFixed(1)}h today</div></div>${on?'<span class="badge b-active">on clock</span>':''}</div>`;}});
+  if(!any)h+=`<div class="muted tiny" style="padding:4px 2px">No one clocked in yet today.</div>`;
  }
  return h;
 }
-async function clockIn(){const jid=$('cjob').value;if(!jid)return;await sb.from('time_entries').insert({member_id:ME.id,job_id:jid});loadAll();}
-async function clockOut(){const o=myOpenShift();if(o){await sb.from('time_entries').update({clock_out:new Date().toISOString()}).eq('id',o.id);}loadAll();}
+async function clockIn(){if(myOpenShift()){toast("You're already clocked in");return;}const sel=$('cjob');const jid=sel&&sel.value;if(!jid){toast('Pick a job');return;}const r=await mutate({table:'time_entries',op:'insert',payload:{member_id:ME.id,job_id:jid}});if(r.ok||r.queued)loadAll();}
+async function clockOut(){const o=myOpenShift();if(!o)return;const r=await mutate({table:'time_entries',op:'update',payload:{clock_out:new Date().toISOString()},match:{col:'id',val:o.id}});if(r.ok||r.queued)loadAll();}
 function updateClock(){const o=ME&&D.time?myOpenShift():null;const c=$('clockchip');if(!c)return;if(o){c.textContent='On clock';c.classList.add('live');}else{c.textContent='Off';c.classList.remove('live');}}
 
 /* ---------- CREW ---------- */
 function vCrew(){
- let h=`<div class="h1">Crew</div><div class="sub">${D.members.length} people${isAdmin()?' · tap ＋ to add':''}</div>`;
- D.members.forEach(m=>{h+=`<div class="member"><div class="av">${initials(m.name)}</div><div style="flex:1"><b>${m.name}</b><div class="muted tiny">${m.role==='admin'?'Admin':'Employee'}</div></div>${m.id===ME.id?'<span class="badge b-soon">you</span>':''}</div>`;});
+ let h=`<div class="h1">Crew</div><div class="sub">${D.members.length} ${D.members.length===1?'person':'people'}${isAdmin()?' · tap ＋ to add, tap a person to manage':''}</div>`;
+ D.members.forEach(m=>{const can=isAdmin()&&m.id!==ME.id;h+=`<div class="member ${can?'tap':''}" ${can?`onclick="manageMember('${m.id}')"`:''}><div class="av">${initials(m.name)}</div><div style="flex:1"><b>${esc(m.name)}</b><div class="muted tiny">${m.role==='admin'?'Admin':'Employee'}</div></div>${m.id===ME.id?'<span class="badge b-soon">you</span>':(can?'<span class="muted">›</span>':'')}</div>`;});
  return h;
 }
-function newMember(){sheet(`<h3>Add crew member</h3><div class="field"><label>Name (their login)</label><input id="mn" placeholder="First name"></div><div class="field"><label>4-digit PIN (their login)</label><input id="mp" type="tel" inputmode="numeric" maxlength="6" placeholder="e.g. 1234"></div><div class="field"><label>Role</label><select id="mr"><option value="employee">Employee</option><option value="admin">Admin</option></select></div><button class="btn acc" onclick="addMember()">Add to crew</button><p class="muted tiny" style="text-align:center;margin-top:10px">They sign in with this name + PIN. Names must be unique.</p>`);}
-async function addMember(){const n=$('mn').value.trim(),p=$('mp').value.trim();if(!n||p.length<4){alert('Name and 4-digit PIN required.');return;}
- const {error}=await sb.from('members').insert({name:n,pin:p,role:$('mr').value});
- if(error){alert(error.message.includes('duplicate')?'That name is taken — use a different one.':error.message);return;}
- closeSheet();loadAll();}
+function newMember(){sheet(`<h3>Add crew member</h3><div class="field"><label>Name (their login)</label><input id="mn" placeholder="First name"></div><div class="field"><label>PIN (4–6 digits)</label><input id="mp" type="tel" inputmode="numeric" maxlength="6" placeholder="e.g. 4821"></div><div class="field"><label>Role</label><select id="mr"><option value="employee">Employee</option><option value="admin">Admin</option></select></div><button class="btn acc" onclick="addMember()">Add to crew</button><p class="muted tiny" style="text-align:center;margin-top:10px">They sign in with this name + PIN. Names must be unique.</p>`);}
+async function addMember(){const n=$('mn').value.trim(),p=$('mp').value.trim(),role=$('mr').value;if(!n||p.length<4){toast('Name and 4-digit PIN required','err');return;}closeSheet();const {error}=await sb.from('members').insert({name:n,pin:p,role});if(error){toast(/duplicate/i.test(error.message)?'That name is taken — use a different one.':error.message,'err');return;}toast('Added '+n,'ok');loadAll();}
+function manageMember(id){const m=D.members.find(x=>x.id===id);if(!m)return;sheet(`<h3>${esc(m.name)}</h3><p class="muted tiny">${m.role==='admin'?'Admin':'Employee'}</p>
+ <div class="field" style="margin-top:14px"><label>Reset PIN</label><input id="rpin" type="tel" inputmode="numeric" maxlength="6" placeholder="New 4–6 digit PIN"></div>
+ <button class="btn acc" onclick="resetPin('${id}')">Save new PIN</button>
+ <button class="btn ghost" style="margin-top:8px" onclick="toggleRole('${id}','${m.role}')">Make ${m.role==='admin'?'Employee':'Admin'}</button>
+ <button class="btn red" style="margin-top:8px" onclick="removeMember('${id}','${esc(m.name)}')">Remove from crew</button>`);}
+async function resetPin(id){const p=$('rpin').value.trim();if(p.length<4){toast('PIN must be 4+ digits','err');return;}closeSheet();const {error}=await sb.from('members').update({pin:p}).eq('id',id);if(error){toast(error.message,'err');return;}toast('PIN updated','ok');loadAll();}
+async function toggleRole(id,role){const nr=role==='admin'?'employee':'admin';closeSheet();const {error}=await sb.from('members').update({role:nr}).eq('id',id);if(error){toast(error.message,'err');return;}toast('Role updated','ok');loadAll();}
+async function removeMember(id,name){if(!confirm('Remove '+name+' from the crew? They will no longer be able to sign in.'))return;closeSheet();const {error}=await sb.from('members').delete().eq('id',id);if(error){toast(error.message,'err');return;}toast('Removed '+name,'ok');loadAll();}
 
 /* ---------- CHAT ---------- */
 function vChat(){
  let h=`<div class="h1">Messages</div><div class="sub">Company crew chat</div><div style="padding-bottom:60px">`;
- D.msgs.filter(m=>!m.job_id).forEach(m=>{h+=`<div class="msg ${m.member_id===ME.id?'me':'them'}"><div class="who">${memberName(m.member_id)}</div>${m.body}<div class="tm">${fmtT(m.created_at)}</div></div>`;});
+ D.msgs.filter(m=>!m.job_id).forEach(m=>{h+=`<div class="msg ${m.member_id===ME.id?'me':'them'} ${String(m.id).startsWith('tmp')?'pending':''}"><div class="who">${esc(memberName(m.member_id))}</div>${esc(m.body)}<div class="tm">${fmtT(m.created_at)}</div></div>`;});
  h+=`</div>`;
- // chatbar appended outside scroll
  setTimeout(()=>{if(!$('cbar')){const b=document.createElement('div');b.className='chatbar';b.id='cbar';const inp=document.createElement('input');inp.id='gmsg';inp.placeholder='Message everyone…';inp.addEventListener('keydown',e=>{if(e.key==='Enter')sendGen();});const bt=document.createElement('button');bt.textContent='➤';bt.onclick=sendGen;b.appendChild(inp);b.appendChild(bt);$('app').appendChild(b);}},10);
  return h;
 }
-async function sendGen(){const i=$('gmsg');const v=i.value.trim();if(!v)return;i.value='';await sb.from('messages').insert({member_id:ME.id,body:v});loadAll();}
+async function sendGen(){const i=$('gmsg');if(!i)return;const v=i.value.trim();if(!v)return;i.value='';
+ const tmp={id:'tmp'+Date.now(),member_id:ME.id,body:v,created_at:new Date().toISOString()};D.msgs.push(tmp);renderSafe();scrollChatBottom();
+ const r=await mutate({table:'messages',op:'insert',payload:{member_id:ME.id,body:v}});
+ if(r.error){D.msgs=D.msgs.filter(x=>x.id!==tmp.id);renderSafe();}else if(r.ok)loadAll();}
 function clearChatbar(){const b=$('cbar');if(b)b.remove();}
 
-/* ---------- SHEET / FAB ---------- */
+/* ---------- SHEET / FAB / IMG ---------- */
 function sheet(html){$('sheetcard').innerHTML=html+`<button class="btn ghost" style="margin-top:10px" onclick="closeSheet()">Close</button>`;$('sheet').classList.add('on');}
 function closeSheet(){$('sheet').classList.remove('on');}
 function onFab(){if(cur==='jobs')newJob();else if(cur==='crew')newMember();}
-function resizeImg(file,cb){const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{const max=720,sc=Math.min(1,max/Math.max(img.width,img.height));const cv=document.createElement('canvas');cv.width=img.width*sc;cv.height=img.height*sc;cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);cv.toBlob(cb,'image/jpeg',.7);};img.src=e.target.result;};r.readAsDataURL(file);}
-
-/* remove chatbar when leaving chat */
-const _go=go;go=function(s){if(cur==='chat'&&s!=='chat')clearChatbar();_go(s);};
+function resizeImg(file,cb){const max=1024;
+ const draw=src=>{const cv=document.createElement('canvas');const sc=Math.min(1,max/Math.max(src.width,src.height));cv.width=Math.round(src.width*sc);cv.height=Math.round(src.height*sc);cv.getContext('2d').drawImage(src,0,0,cv.width,cv.height);cv.toBlob(cb,'image/jpeg',.72);};
+ if('createImageBitmap'in window){createImageBitmap(file,{imageOrientation:'from-image'}).then(draw).catch(()=>{const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>draw(img);img.src=e.target.result;};r.readAsDataURL(file);});}
+ else{const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>draw(img);img.src=e.target.result;};r.readAsDataURL(file);}
+}
 
 /* ---------- BOOT ---------- */
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+updateNet();
 (async function(){
- const {data:{session}}=await sb.auth.getSession();
- if(session){await afterLogin();}else{showLogin();}
+ try{const {data:{session}}=await sb.auth.getSession();if(session){await afterLogin();}else{showLogin();}}
+ catch(e){const m=cacheGet('ccm_me');if(m&&!navigator.onLine){ME=m;mountUI();restoreD();render();}else showLogin();}
 })();
 </script>
 </body>

@@ -1,0 +1,16 @@
+{
+  "name": "Complete Care Masonry",
+  "short_name": "CCM Crew",
+  "description": "Crew app for Complete Care Masonry — checklists, photo proof, clock in/out, and messaging.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080808",
+  "theme_color": "#0d0d0d",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
