@@ -1,5 +1,5 @@
 /* Complete Care Masonry — service worker (app-shell offline) */
-const C = 'ccm-v2';
+const C = 'ccm-v3';
 const SHELL = [
   './', './index.html', './manifest.json',
   './icon-192.png', './icon-512.png',
