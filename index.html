@@ -89,6 +89,18 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;background:#15171a;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:600;z-index:200;opacity:0;transition:.22s;pointer-events:none;max-width:90%;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.25)}
 .toast.on{opacity:1}.toast.err{background:var(--red)}.toast.ok{background:var(--green)}
+#tour{position:fixed;inset:0;background:#080808;color:#fff;z-index:120;display:none;flex-direction:column;max-width:540px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 16px) 22px calc(24px + env(safe-area-inset-bottom));overflow:hidden}
+#tour.on{display:flex}
+#tour .skip{align-self:flex-end;color:#8a8a8a;font-size:13px;font-weight:600;padding:6px 4px}
+#tour .body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+#tour .emoji{font-size:84px;line-height:1;margin-bottom:22px;filter:drop-shadow(0 8px 22px rgba(232,90,0,.4));animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+#tour h2{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:12px}#tour h2 .o{color:var(--accent)}
+#tour p{font-size:16px;line-height:1.55;color:#c9cdd2;max-width:330px}#tour p b{color:#fff}
+#tour .dots{display:flex;gap:7px;justify-content:center;margin:18px 0}
+#tour .dot{width:8px;height:8px;border-radius:50%;background:#333;transition:.25s}
+#tour .dot.on{background:var(--accent);width:22px;border-radius:5px}
+#tour .ctrls{display:flex;gap:10px}#tour .ctrls .btn{flex:1}
 </style>
 </head>
 <body>
@@ -97,6 +109,7 @@ input,textarea,select{font-family:inherit;font-size:16px}
     <div class="wm"><span class="o">COMPLETE CARE</span> MASONRY</div>
     <div class="sp"></div>
     <span class="chip" id="clockchip" onclick="go('today')">—</span>
+    <button class="chip" id="helpbtn" onclick="startTour()" style="cursor:pointer">?</button>
     <button class="rolepill" onclick="logout()"><span class="av" id="meav">?</span><span id="mename">—</span></button>
   </div>
   <div class="netbar" id="netbar"></div>
@@ -123,6 +136,19 @@ input,textarea,select{font-family:inherit;font-size:16px}
 </div>
 <div class="sheet" id="sheet" onclick="if(event.target===this)closeSheet()"><div class="sheetcard" id="sheetcard"></div></div>
 <div class="toast" id="toast"></div>
+<div id="tour">
+  <button class="skip" onclick="endTour()">Skip ✕</button>
+  <div class="body">
+    <div class="emoji" id="tEmoji">👋</div>
+    <h2 id="tTitle"></h2>
+    <p id="tBody"></p>
+  </div>
+  <div class="dots" id="tDots"></div>
+  <div class="ctrls">
+    <button class="btn ghost" id="tBack" onclick="tourPrev()" style="display:none">‹ Back</button>
+    <button class="btn acc" id="tNext" onclick="tourNext()">Next ›</button>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -204,7 +230,7 @@ async function afterLogin(){
  const {data:m}=await sb.from('members').select('*').eq('auth_id',session.user.id).maybeSingle();
  if(!m){showLogin();return;}
  ME={id:m.id,name:m.name,role:m.role};localStorage.setItem('ccm_me',JSON.stringify(ME));
- mountUI();await loadAll();subscribe();go('jobs');flush();
+ mountUI();await loadAll();subscribe();go('jobs');flush();maybeTour();
 }
 function showLogin(){$('login').classList.add('on');$('nav').style.display='none';$('fab').style.display='none';}
 async function logout(){try{await sb.auth.signOut();}catch(e){}ME=null;localStorage.removeItem('ccm_me');$('lname').value='';$('lpin').value='';showLogin();}
@@ -429,6 +455,29 @@ function resizeImg(file,cb){const max=1024;
  if('createImageBitmap'in window){createImageBitmap(file,{imageOrientation:'from-image'}).then(draw).catch(()=>{const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>draw(img);img.src=e.target.result;};r.readAsDataURL(file);});}
  else{const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>draw(img);img.src=e.target.result;};r.readAsDataURL(file);}
 }
+
+/* ---------- WELCOME TOUR ---------- */
+const TOUR=[
+ {e:'👋',t:'Welcome to the crew!',b:'This app keeps your workday simple. Take 30 seconds to swipe through — you’ll have it down by the end.'},
+ {e:'🧱',t:'Your jobs',b:'Tap <b>Jobs</b>, then tap a job to open its checklist. Every step is just one thing to get done.'},
+ {e:'✅',t:'Check it off',b:'Tap the circle next to a step when it’s done. Some steps show a <b>📷 photo</b> tag — your camera opens so you can snap proof. Easy.'},
+ {e:'⏱',t:'Clock in & out',b:'Open <b>Today</b>. Hit <b>Clock in</b> when you reach the site and <b>Clock out</b> when you leave. Your hours add up automatically.'},
+ {e:'⚑',t:'Hit a snag?',b:'Tap <b>Flag issue</b> on any step to tell the boss right away — ran out of block, hit roots, anything. They see it instantly.'},
+ {e:'💬',t:'Stay in touch',b:'Use <b>Messages</b> for the whole crew, or chat right inside a job. Keep it quick and simple.'},
+ {e:'📶',t:'No signal? No problem',b:'Working in a basement or a dead zone? Keep going — the app saves your work and syncs the moment you’re back online.'},
+ {e:'🚀',t:'You’re all set!',b:'That’s the whole app. Tap below and have a great day out there. (Need a refresher? Tap <b>?</b> up top anytime.)'},
+];
+let tIdx=0;
+function startTour(){tIdx=0;tourPaint();$('tour').classList.add('on');}
+function endTour(){$('tour').classList.remove('on');if(ME)try{localStorage.setItem('ccm_tour_'+ME.id,'1');}catch(e){}}
+function tourPaint(){const c=TOUR[tIdx];$('tEmoji').textContent=c.e;$('tEmoji').style.animation='none';void $('tEmoji').offsetWidth;$('tEmoji').style.animation='';$('tTitle').innerHTML=c.t;$('tBody').innerHTML=c.b;
+ $('tDots').innerHTML=TOUR.map((_,i)=>`<span class="dot ${i===tIdx?'on':''}"></span>`).join('');
+ $('tBack').style.display=tIdx>0?'flex':'none';
+ $('tNext').textContent=tIdx===TOUR.length-1?'Get started 🚀':'Next ›';}
+function tourNext(){if(tIdx>=TOUR.length-1){endTour();return;}tIdx++;tourPaint();}
+function tourPrev(){if(tIdx>0){tIdx--;tourPaint();}}
+function maybeTour(){if(ME&&!localStorage.getItem('ccm_tour_'+ME.id))setTimeout(startTour,450);}
+(function(){const t=$('tour');if(!t)return;let x0=null;t.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;},{passive:true});t.addEventListener('touchend',e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;if(dx<-45)tourNext();else if(dx>45)tourPrev();x0=null;},{passive:true});})();
 
 /* ---------- BOOT ---------- */
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
