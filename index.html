@@ -201,8 +201,10 @@ let cur='jobs',curJob=null,dashPeriod='week',curMember=null,signedUrls={},calMon
 const TYPE_CHIP=t=>t==='residential'?'<span class="tagchip tag-res">🏠 Residential</span>':(t==='commercial'?'<span class="tagchip tag-com">🏢 Commercial</span>':'');
 const isAdmin=()=>ME&&ME.role==='admin';
 
-/* ---------- TOAST ---------- */
+/* ---------- TOAST + GUARDS ---------- */
 let toT;function toast(m,type){const t=$('toast');t.textContent=m;t.className='toast on'+(type?(' '+type):'');clearTimeout(toT);toT=setTimeout(()=>t.className='toast',2600);}
+function needNet(){if(!navigator.onLine){toast('You need a connection for this','err');return false;}return true;}
+const adminCount=()=>D.members.filter(m=>m.role==='admin').length;
 
 /* ---------- CONNECTION / OUTBOX ---------- */
 const OUT='ccm_outbox';
@@ -430,13 +432,14 @@ function estForm(e){e=e||{};const t=e.job_type||'';return `<div class="field"><l
  <div class="field"><label>Due date (shows on calendar)</label><input type="date" id="edd" value="${e.due_date||''}"></div>
  <div class="field"><label>Notes</label><textarea id="enotes" placeholder="Scope, contact, etc.">${esc(e.notes||'')}</textarea></div>`;}
 function newEstimate(){sheet(`<h3>New estimate</h3>${estForm({due_date:calSel})}<button class="btn acc" onclick="saveEstimate()">Save estimate</button>`);}
-async function saveEstimate(){const name=$('en').value.trim();if(!name){toast('Name the estimate','err');return;}const payload={name,address:$('ea').value.trim()||null,amount:$('eamt').value?Number($('eamt').value):null,job_type:$('etype').value||null,due_date:$('edd').value||null,notes:$('enotes').value.trim()||null};closeSheet();const {error}=await sb.from('estimates').insert(payload);if(error){toast(error.message,'err');return;}toast('Estimate saved','ok');loadAll();}
+function estAmount(){const v=$('eamt').value;if(v==='')return{ok:true,val:null};const n=Number(v);if(isNaN(n)||n<0){toast('Amount must be a positive number','err');return{ok:false};}return{ok:true,val:n};}
+async function saveEstimate(){const name=$('en').value.trim();if(!name){toast('Name the estimate','err');return;}const am=estAmount();if(!am.ok)return;if(!needNet())return;const payload={name,address:$('ea').value.trim()||null,amount:am.val,job_type:$('etype').value||null,due_date:$('edd').value||null,notes:$('enotes').value.trim()||null};closeSheet();const {error}=await sb.from('estimates').insert(payload);if(error){toast(error.message,'err');return;}toast('Estimate saved','ok');loadAll();}
 function editEstimate(id){const e=D.estimates.find(x=>x.id===id);if(!e)return;sheet(`<h3>Estimate</h3>${estForm(e)}<button class="btn acc" onclick="updateEstimate('${id}')">Save changes</button>
  <div class="row" style="gap:8px;margin-top:10px"><button class="btn green sm" style="flex:1" onclick="setEstStatus('${id}','won')">Mark won</button><button class="btn ghost sm" style="flex:1" onclick="setEstStatus('${id}','lost')">Mark lost</button><button class="btn ghost sm" style="flex:1" onclick="setEstStatus('${id}','open')">Reopen</button></div>
  <button class="btn red" style="margin-top:8px" onclick="delEstimate('${id}')">Delete estimate</button>`);}
-async function updateEstimate(id){const name=$('en').value.trim();if(!name){toast('Name required','err');return;}const payload={name,address:$('ea').value.trim()||null,amount:$('eamt').value?Number($('eamt').value):null,job_type:$('etype').value||null,due_date:$('edd').value||null,notes:$('enotes').value.trim()||null};closeSheet();const {error}=await sb.from('estimates').update(payload).eq('id',id);if(error){toast(error.message,'err');return;}toast('Estimate updated','ok');loadAll();}
-async function setEstStatus(id,st){closeSheet();const {error}=await sb.from('estimates').update({status:st}).eq('id',id);if(error){toast(error.message,'err');return;}toast('Estimate '+st,'ok');loadAll();}
-async function delEstimate(id){if(!confirm('Delete this estimate?'))return;closeSheet();const {error}=await sb.from('estimates').delete().eq('id',id);if(error){toast(error.message,'err');return;}toast('Estimate deleted','ok');loadAll();}
+async function updateEstimate(id){const name=$('en').value.trim();if(!name){toast('Name required','err');return;}const am=estAmount();if(!am.ok)return;if(!needNet())return;const payload={name,address:$('ea').value.trim()||null,amount:am.val,job_type:$('etype').value||null,due_date:$('edd').value||null,notes:$('enotes').value.trim()||null};closeSheet();const {error}=await sb.from('estimates').update(payload).eq('id',id);if(error){toast(error.message,'err');return;}toast('Estimate updated','ok');loadAll();}
+async function setEstStatus(id,st){if(!needNet())return;closeSheet();const {error}=await sb.from('estimates').update({status:st}).eq('id',id);if(error){toast(error.message,'err');return;}toast('Estimate '+st,'ok');loadAll();}
+async function delEstimate(id){if(!confirm('Delete this estimate?'))return;if(!needNet())return;closeSheet();const {error}=await sb.from('estimates').delete().eq('id',id);if(error){toast(error.message,'err');return;}toast('Estimate deleted','ok');loadAll();}
 /* ---------- ONBOARDING (employee) ---------- */
 function vOnboard(){
  const n=ONB.length, done=onbDoneCount(ME.id), pct=Math.round(done/n*100);
@@ -721,9 +724,9 @@ function editShift(id){const t=D.time.find(x=>x.id===id);if(!t)return;if(String(
 async function saveShift(id){const inV=$('sfin').value,outV=$('sfout').value;if(!inV){toast('Set a clock-in time','err');return;}
  const ci=new Date(inV).toISOString(),co=outV?new Date(outV).toISOString():null;
  if(co&&new Date(co)<new Date(ci)){toast('Clock-out is before clock-in','err');return;}
- closeSheet();const {error}=await sb.from('time_entries').update({job_id:$('sfjob').value||null,clock_in:ci,clock_out:co}).eq('id',id);
+ if(!needNet())return;closeSheet();const {error}=await sb.from('time_entries').update({job_id:$('sfjob').value||null,clock_in:ci,clock_out:co}).eq('id',id);
  if(error){toast(error.message,'err');return;}toast('Shift updated','ok');loadAll();}
-async function delShift(id){if(!confirm('Delete this shift? This removes its hours.'))return;closeSheet();const {error}=await sb.from('time_entries').delete().eq('id',id);if(error){toast(error.message,'err');return;}toast('Shift deleted','ok');loadAll();}
+async function delShift(id){if(!confirm('Delete this shift? This removes its hours.'))return;if(!needNet())return;closeSheet();const {error}=await sb.from('time_entries').delete().eq('id',id);if(error){toast(error.message,'err');return;}toast('Shift deleted','ok');loadAll();}
 function addShift(mid){const jobOpts=D.jobs.map(j=>`<option value="${j.id}">${esc(j.title)}</option>`).join('');const now=toLocalInput(new Date().toISOString());
  sheet(`<h3>Add shift</h3><p class="muted tiny">Manually log hours for ${esc(memberName(mid))}.</p>
   <div class="field"><label>Job</label><select id="asjob">${jobOpts||'<option value="">—</option>'}</select></div>
@@ -732,7 +735,7 @@ function addShift(mid){const jobOpts=D.jobs.map(j=>`<option value="${j.id}">${es
   <button class="btn acc" onclick="saveAddShift('${mid}')">Add shift</button>`);}
 async function saveAddShift(mid){const inV=$('asin').value,outV=$('asout').value;if(!inV||!outV){toast('Set both times','err');return;}
  if(new Date(outV)<new Date(inV)){toast('Clock-out is before clock-in','err');return;}
- closeSheet();const {error}=await sb.from('time_entries').insert({member_id:mid,job_id:$('asjob').value||null,clock_in:new Date(inV).toISOString(),clock_out:new Date(outV).toISOString()});
+ if(!needNet())return;closeSheet();const {error}=await sb.from('time_entries').insert({member_id:mid,job_id:$('asjob').value||null,clock_in:new Date(inV).toISOString(),clock_out:new Date(outV).toISOString()});
  if(error){toast(error.message,'err');return;}toast('Shift added','ok');loadAll();}
 
 /* ---------- CREW ---------- */
@@ -768,7 +771,7 @@ function movePerson(id){const m=D.members.find(x=>x.id===id);if(!m)return;
  D.crews.forEach(c=>{h+=`<div class="member tap" onclick="moveToCrew('${id}','${c.id}')"><div style="flex:1"><b>${esc(c.name)}</b></div>${m.crew_id===c.id?'<span class="badge b-active">current</span>':''}</div>`;});
  sheet(h);
 }
-async function moveToCrew(id,crewId){const {error}=await sb.from('members').update({crew_id:crewId||null}).eq('id',id);if(error){toast(error.message,'err');return;}closeSheet();toast('Moved'+(crewId?' to '+crewName(crewId):' to Unassigned'),'ok');loadAll();}
+async function moveToCrew(id,crewId){if(!needNet())return;const {error}=await sb.from('members').update({crew_id:crewId||null}).eq('id',id);if(error){toast(error.message,'err');return;}closeSheet();toast('Moved'+(crewId?' to '+crewName(crewId):' to Unassigned'),'ok');loadAll();}
 function moveCrewSheet(){
  let h=`<h3>Move people between crews</h3><p class="muted tiny">Change anyone’s crew right here.</p>`;
  if(!D.crews.length)h+=`<div class="card" style="background:#fff8ee;border-color:var(--amber)"><b style="color:var(--amber)">Make a crew first</b><div class="muted tiny">Tap “＋ New crew” to create one, then move people in.</div></div>`;
@@ -777,22 +780,22 @@ function moveCrewSheet(){
  sheet(h);
 }
 function newCrew(){sheet(`<h3>New crew</h3><div class="field"><label>Crew name</label><input id="cn" placeholder="e.g. Crew A · Mike’s Crew · East Team"></div><button class="btn acc" onclick="saveCrew()">Create crew</button>`);}
-async function saveCrew(){const n=$('cn').value.trim();if(!n){toast('Name the crew','err');return;}closeSheet();const {error}=await sb.from('crews').insert({name:n});if(error){toast(/duplicate/i.test(error.message)?'That crew name is taken.':error.message,'err');return;}toast('Crew created','ok');loadAll();}
+async function saveCrew(){const n=$('cn').value.trim();if(!n){toast('Name the crew','err');return;}if(!needNet())return;closeSheet();const {error}=await sb.from('crews').insert({name:n});if(error){toast(/duplicate/i.test(error.message)?'That crew name is taken.':error.message,'err');return;}toast('Crew created','ok');loadAll();}
 function editCrew(id){const c=D.crews.find(x=>x.id===id);if(!c)return;const count=D.members.filter(m=>m.crew_id===id).length;sheet(`<h3>Edit crew</h3><div class="field"><label>Crew name</label><input id="ecn" value="${esc(c.name)}"></div><button class="btn acc" onclick="renameCrew('${id}')">Save name</button><button class="btn red" style="margin-top:8px" onclick="deleteCrew('${id}','${esc(c.name)}')">Delete crew</button><p class="muted tiny" style="text-align:center;margin-top:8px">Deleting keeps people & jobs — they just become Unassigned (${count} on this crew).</p>`);}
-async function renameCrew(id){const n=$('ecn').value.trim();if(!n){toast('Name required','err');return;}closeSheet();const {error}=await sb.from('crews').update({name:n}).eq('id',id);if(error){toast(error.message,'err');return;}toast('Crew renamed','ok');loadAll();}
-async function deleteCrew(id,name){if(!confirm('Delete crew "'+name+'"? People & jobs on it become Unassigned.'))return;closeSheet();const {error}=await sb.from('crews').delete().eq('id',id);if(error){toast(error.message,'err');return;}toast('Crew deleted','ok');loadAll();}
+async function renameCrew(id){const n=$('ecn').value.trim();if(!n){toast('Name required','err');return;}if(!needNet())return;closeSheet();const {error}=await sb.from('crews').update({name:n}).eq('id',id);if(error){toast(error.message,'err');return;}toast('Crew renamed','ok');loadAll();}
+async function deleteCrew(id,name){if(!confirm('Delete crew "'+name+'"? People & jobs on it become Unassigned.'))return;if(!needNet())return;closeSheet();const {error}=await sb.from('crews').delete().eq('id',id);if(error){toast(error.message,'err');return;}toast('Crew deleted','ok');loadAll();}
 function newMember(){sheet(`<h3>Add crew member</h3><div class="field"><label>Name (their login)</label><input id="mn" placeholder="First name"></div><div class="field"><label>PIN (4–6 digits)</label><input id="mp" type="tel" inputmode="numeric" maxlength="6" placeholder="e.g. 4821"></div><div class="field"><label>Role</label><select id="mr"><option value="employee">Employee</option><option value="admin">Admin</option></select></div><div class="field"><label>Crew</label><select id="mcrew">${crewSelectOpts(null)}</select></div><button class="btn acc" onclick="addMember()">Add to crew</button><p class="muted tiny" style="text-align:center;margin-top:10px">They sign in with this name + PIN. Names must be unique.</p>`);}
-async function addMember(){const n=$('mn').value.trim(),p=$('mp').value.trim(),role=$('mr').value,crew=$('mcrew').value||null;if(!n||p.length<4){toast('Name and 4-digit PIN required','err');return;}closeSheet();const {error}=await sb.from('members').insert({name:n,pin:p,role,crew_id:crew});if(error){toast(/duplicate/i.test(error.message)?'That name is taken — use a different one.':error.message,'err');return;}toast('Added '+n,'ok');loadAll();}
+async function addMember(){const n=$('mn').value.trim(),p=$('mp').value.trim(),role=$('mr').value,crew=$('mcrew').value||null;if(!n||p.length<4){toast('Name and 4-digit PIN required','err');return;}if(!/^[0-9]+$/.test(p)){toast('PIN must be numbers only','err');return;}if(!needNet())return;closeSheet();const {error}=await sb.from('members').insert({name:n,pin:p,role,crew_id:crew});if(error){toast(/duplicate/i.test(error.message)?'That name is taken — use a different one.':error.message,'err');return;}toast('Added '+n,'ok');loadAll();}
 function manageMember(id){const m=D.members.find(x=>x.id===id);if(!m)return;sheet(`<h3>${esc(m.name)}</h3><p class="muted tiny">${m.role==='admin'?'Admin':'Employee'}</p>
  <div class="field" style="margin-top:14px"><label>Crew</label><select id="mmcrew" onchange="assignMemberCrew('${id}',this.value)">${crewSelectOpts(m.crew_id)}</select></div>
  <div class="field"><label>Reset PIN</label><input id="rpin" type="tel" inputmode="numeric" maxlength="6" placeholder="New 4–6 digit PIN"></div>
  <button class="btn acc" onclick="resetPin('${id}')">Save new PIN</button>
  <button class="btn ghost" style="margin-top:8px" onclick="toggleRole('${id}','${m.role}')">Make ${m.role==='admin'?'Employee':'Admin'}</button>
  <button class="btn red" style="margin-top:8px" onclick="removeMember('${id}','${esc(m.name)}')">Remove from crew</button>`);}
-async function assignMemberCrew(id,crewId){const {error}=await sb.from('members').update({crew_id:crewId||null}).eq('id',id);if(error){toast(error.message,'err');return;}toast('Crew updated','ok');loadAll();}
-async function resetPin(id){const p=$('rpin').value.trim();if(p.length<4){toast('PIN must be 4+ digits','err');return;}closeSheet();const {error}=await sb.from('members').update({pin:p}).eq('id',id);if(error){toast(error.message,'err');return;}toast('PIN updated','ok');loadAll();}
-async function toggleRole(id,role){const nr=role==='admin'?'employee':'admin';closeSheet();const {error}=await sb.from('members').update({role:nr}).eq('id',id);if(error){toast(error.message,'err');return;}toast('Role updated','ok');loadAll();}
-async function removeMember(id,name){if(!confirm('Remove '+name+' from the crew? They will no longer be able to sign in.'))return;closeSheet();const {error}=await sb.from('members').delete().eq('id',id);if(error){toast(error.message,'err');return;}toast('Removed '+name,'ok');loadAll();}
+async function assignMemberCrew(id,crewId){if(!needNet())return;const {error}=await sb.from('members').update({crew_id:crewId||null}).eq('id',id);if(error){toast(error.message,'err');return;}toast('Crew updated','ok');loadAll();}
+async function resetPin(id){const p=$('rpin').value.trim();if(p.length<4){toast('PIN must be 4+ digits','err');return;}if(!needNet())return;closeSheet();const {error}=await sb.from('members').update({pin:p}).eq('id',id);if(error){toast(error.message,'err');return;}toast('PIN updated','ok');loadAll();}
+async function toggleRole(id,role){if(role==='admin'&&adminCount()<=1){toast('Keep at least one admin on the account','err');return;}const nr=role==='admin'?'employee':'admin';if(!needNet())return;closeSheet();const {error}=await sb.from('members').update({role:nr}).eq('id',id);if(error){toast(error.message,'err');return;}toast('Role updated','ok');loadAll();}
+async function removeMember(id,name){const m=D.members.find(x=>x.id===id);if(m&&m.role==='admin'&&adminCount()<=1){toast("Can't remove the only admin","err");return;}if(!confirm('Remove '+name+' from the crew? They will no longer be able to sign in.'))return;if(!needNet())return;closeSheet();const {error}=await sb.from('members').delete().eq('id',id);if(error){toast(error.message,'err');return;}toast('Removed '+name,'ok');loadAll();}
 
 /* ---------- CHAT ---------- */
 function vChat(){
