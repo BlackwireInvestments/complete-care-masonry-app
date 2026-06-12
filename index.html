@@ -89,6 +89,11 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;background:#15171a;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:600;z-index:200;opacity:0;transition:.22s;pointer-events:none;max-width:90%;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.25)}
 .toast.on{opacity:1}.toast.err{background:var(--red)}.toast.ok{background:var(--green)}
+.seg{display:flex;background:#e3e6ea;border-radius:10px;padding:3px;margin-bottom:14px}
+.seg button{flex:1;padding:8px;border-radius:8px;font-size:13px;font-weight:700;color:var(--mut)}
+.seg button.on{background:#fff;color:var(--txt);box-shadow:var(--sh)}
+.shift{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f2f4;font-size:13px}
+.shift:last-child{border-bottom:none}
 #tour{position:fixed;inset:0;background:#080808;color:#fff;z-index:120;display:none;flex-direction:column;max-width:540px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 16px) 22px calc(24px + env(safe-area-inset-bottom));overflow:hidden}
 #tour.on{display:flex}
 #tour .skip{align-self:flex-end;color:#8a8a8a;font-size:13px;font-weight:600;padding:6px 4px}
@@ -117,6 +122,7 @@ input,textarea,select{font-family:inherit;font-size:16px}
   <button class="fab" id="fab" style="display:none" onclick="onFab()">＋</button>
   <div class="nav" id="nav" style="display:none">
     <button data-s="jobs" onclick="go('jobs')"><span class="ic">🧱</span>Jobs</button>
+    <button data-s="dash" id="navdash" onclick="go('dash')" style="display:none"><span class="ic">📊</span>Dashboard</button>
     <button data-s="today" onclick="go('today')"><span class="ic">⏱</span>Today</button>
     <button data-s="crew" onclick="go('crew')"><span class="ic">👷</span>Crew</button>
     <button data-s="chat" onclick="go('chat')"><span class="ic">💬</span>Messages</button>
@@ -165,7 +171,7 @@ const fmtD=t=>new Date(t).toLocaleDateString('en-US',{weekday:'short',month:'sho
 
 let ME=null;
 let D={jobs:[],tasks:[],comps:[],time:[],msgs:[],members:[]};
-let cur='jobs',curJob=null;
+let cur='jobs',curJob=null,dashPeriod='week';
 const isAdmin=()=>ME&&ME.role==='admin';
 
 /* ---------- TOAST ---------- */
@@ -222,7 +228,7 @@ async function signIn(){
  }catch(e){err.style.display='block';err.textContent=e.message||'Sign-in failed.';}
  btn.disabled=false;btn.textContent='Sign in ›';
 }
-function mountUI(){$('login').classList.remove('on');$('nav').style.display='flex';$('mename').textContent=ME.name;$('meav').textContent=initials(ME.name);}
+function mountUI(){$('login').classList.remove('on');$('nav').style.display='flex';$('mename').textContent=ME.name;$('meav').textContent=initials(ME.name);$('navdash').style.display=isAdmin()?'flex':'none';}
 async function afterLogin(){
  const {data:{session}}=await sb.auth.getSession();
  if(!session){showLogin();return;}
@@ -272,6 +278,7 @@ function paint(){const el=$('screen');
  else if(cur==='job')el.innerHTML=vJob(curJob);
  else if(cur==='today')el.innerHTML=vToday();
  else if(cur==='crew')el.innerHTML=vCrew();
+ else if(cur==='dash')el.innerHTML=vDash();
  else if(cur==='chat')el.innerHTML=vChat();
 }
 function render(){if(!ME)return;paint();fabState();updateClock();if(cur==='chat')scrollChatBottom();}
@@ -414,6 +421,57 @@ function vToday(){
 async function clockIn(){if(myOpenShift()){toast("You're already clocked in");return;}const sel=$('cjob');const jid=sel&&sel.value;if(!jid){toast('Pick a job');return;}const r=await mutate({table:'time_entries',op:'insert',payload:{member_id:ME.id,job_id:jid}});if(r.ok||r.queued)loadAll();}
 async function clockOut(){const o=myOpenShift();if(!o)return;const r=await mutate({table:'time_entries',op:'update',payload:{clock_out:new Date().toISOString()},match:{col:'id',val:o.id}});if(r.ok||r.queued)loadAll();}
 function updateClock(){const o=ME&&D.time?myOpenShift():null;const c=$('clockchip');if(!c)return;if(o){c.textContent='On clock';c.classList.add('live');}else{c.textContent='Off';c.classList.remove('live');}}
+
+/* ---------- ADMIN DASHBOARD ---------- */
+function periodStartTs(p){const d=new Date();d.setHours(0,0,0,0);if(p==='today')return d.getTime();if(p==='week'){d.setDate(d.getDate()-d.getDay());return d.getTime();}return 0;}
+function shiftHours(t){return (new Date(t.clock_out||Date.now())-new Date(t.clock_in))/3600000;}
+function setPeriod(p){dashPeriod=p;render();}
+function toggleEmp(id){const e=$('emp_'+id);if(e)e.style.display=e.style.display==='none'?'block':'none';}
+function shiftRow(t){const j=D.jobs.find(x=>x.id===t.job_id);const out=t.clock_out?fmtT(t.clock_out):'<span style="color:var(--green);font-weight:700">on clock</span>';return `<div class="shift"><div><div style="font-weight:600">${fmtD(t.clock_in)}</div><div class="muted tiny">${j?esc(j.title):'—'}</div></div><div style="text-align:right"><div>${fmtT(t.clock_in)} → ${out}</div><div class="muted tiny">${shiftHours(t).toFixed(2)} h</div></div></div>`;}
+function vDash(){
+ const ps=periodStartTs(dashPeriod);
+ const label={today:'Today',week:'This Week',all:'All Time'}[dashPeriod];
+ const ents=D.time.filter(t=>new Date(t.clock_in).getTime()>=ps);
+ const onclock=D.time.filter(t=>!t.clock_out).length;
+ const totalH=ents.reduce((a,t)=>a+shiftHours(t),0);
+ const activeJobs=D.jobs.filter(j=>(j.status||'active')==='active').length;
+ const issues=D.msgs.filter(m=>new Date(m.created_at).getTime()>=ps&&(m.body||'').startsWith('⚑')).length;
+ let h=`<div class="h1">Dashboard</div><div class="sub">Everything at a glance</div>`;
+ h+=`<div class="seg">${['today','week','all'].map(p=>`<button class="${p===dashPeriod?'on':''}" onclick="setPeriod('${p}')">${{today:'Today',week:'This Week',all:'All Time'}[p]}</button>`).join('')}</div>`;
+ h+=`<div class="row" style="gap:8px;margin-bottom:8px"><div class="stat"><div class="n">${totalH.toFixed(1)}</div><div class="l">Hours · ${esc(label)}</div></div><div class="stat"><div class="n" style="${onclock?'color:var(--green)':''}">${onclock}</div><div class="l">On the clock now</div></div></div>`;
+ h+=`<div class="row" style="gap:8px;margin-bottom:16px"><div class="stat"><div class="n">${activeJobs}</div><div class="l">Active jobs</div></div><div class="stat"><div class="n" style="${issues?'color:var(--red)':''}">${issues}</div><div class="l">Issues</div></div></div>`;
+ h+=`<div class="row" style="justify-content:space-between;margin:6px 2px 8px"><div style="font-weight:800;font-size:13px;text-transform:uppercase">Timesheet · ${esc(label)}</div><button class="btn ghost sm" onclick="exportTimesheet()">⬇ Export CSV</button></div>`;
+ const members=D.members.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+ let grand=0,anyShift=false;
+ members.forEach(m=>{
+  const me=D.time.filter(t=>t.member_id===m.id&&new Date(t.clock_in).getTime()>=ps).sort((a,b)=>new Date(b.clock_in)-new Date(a.clock_in));
+  const tot=me.reduce((a,t)=>a+shiftHours(t),0);grand+=tot;if(me.length)anyShift=true;
+  const on=me.some(t=>!t.clock_out);
+  h+=`<div class="card" style="padding:0">
+   <div class="row" style="padding:13px" onclick="toggleEmp('${m.id}')"><div class="member-av" style="width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700">${initials(m.name)}</div><div style="flex:1"><b>${esc(m.name)}</b> ${on?'<span class="badge b-active">on clock</span>':''}<div class="muted tiny">${me.length} shift${me.length===1?'':'s'} · ${m.role==='admin'?'Admin':'Employee'}</div></div><div style="text-align:right"><div style="font-weight:800;font-size:18px">${tot.toFixed(1)}h</div><div class="muted tiny">tap ›</div></div></div>
+   <div id="emp_${m.id}" style="display:none;border-top:1px solid var(--line);padding:2px 13px 8px">${me.length?me.map(shiftRow).join(''):'<div class="muted tiny" style="padding:8px 0">No shifts this period.</div>'}</div>
+  </div>`;
+ });
+ if(!anyShift)h+=`<div class="muted tiny" style="padding:2px 2px 8px">No hours logged ${esc(label.toLowerCase())} yet.</div>`;
+ h+=`<div class="card" style="background:var(--slate);color:#fff"><div class="row" style="justify-content:space-between"><b>Total payroll hours · ${esc(label)}</b><b style="font-size:20px">${grand.toFixed(1)}h</b></div></div>`;
+ const flags=D.msgs.filter(m=>(m.body||'').startsWith('⚑')&&new Date(m.created_at).getTime()>=ps).slice(-6).reverse();
+ if(flags.length){h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;margin:16px 2px 8px;color:var(--red)">⚑ Recent issues</div>`;flags.forEach(f=>{h+=`<div class="card" style="border-left:4px solid var(--red)"><div class="tiny muted">${esc(memberName(f.member_id))} · ${fmtD(f.created_at)} · ${fmtT(f.created_at)}</div>${esc(f.body.replace('⚑ ISSUE — ',''))}</div>`;});}
+ const jobs=D.jobs.slice(0,6);
+ if(jobs.length){h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;margin:16px 2px 8px">Jobs progress</div>`;jobs.forEach(j=>{const p=jobProg(j.id);h+=`<div class="card tap" onclick="openJob('${j.id}')"><div class="row" style="justify-content:space-between"><b>${esc(j.title)}</b><span class="muted tiny">${p}%</span></div><div class="prog"><i style="width:${p}%"></i></div></div>`;});}
+ return h;
+}
+function exportTimesheet(){const ps=periodStartTs(dashPeriod);
+ const ents=D.time.filter(t=>new Date(t.clock_in).getTime()>=ps).sort((a,b)=>new Date(a.clock_in)-new Date(b.clock_in));
+ const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+ const rows=[['Employee','Date','Clock In','Clock Out','Job','Hours']];
+ ents.forEach(t=>{const j=D.jobs.find(x=>x.id===t.job_id);rows.push([memberName(t.member_id),fmtD(t.clock_in),fmtT(t.clock_in),t.clock_out?fmtT(t.clock_out):'(still on clock)',j?j.title:'',shiftHours(t).toFixed(2)]);});
+ const tot={};ents.forEach(t=>{const n=memberName(t.member_id);tot[n]=(tot[n]||0)+shiftHours(t);});
+ rows.push([]);rows.push(['TOTALS — '+dashPeriod,'','','','','']);
+ Object.entries(tot).forEach(([n,hh])=>rows.push([n,'','','','',hh.toFixed(2)]));
+ const csv=rows.map(r=>r.map(q).join(',')).join('\n');
+ try{const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='timesheet-'+dashPeriod+'-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Timesheet exported','ok');}
+ catch(e){toast('Export not supported here','err');}
+}
 
 /* ---------- CREW ---------- */
 function vCrew(){
