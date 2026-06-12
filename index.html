@@ -467,8 +467,25 @@ function vToday(){
  }
  return h;
 }
-async function clockIn(){if(myOpenShift()){toast("You're already clocked in");return;}const sel=$('cjob');const jid=sel&&sel.value;if(!jid){toast('Pick a job');return;}const r=await mutate({table:'time_entries',op:'insert',payload:{member_id:ME.id,job_id:jid}});if(r.ok||r.queued)loadAll();}
-async function clockOut(){const o=myOpenShift();if(!o)return;const r=await mutate({table:'time_entries',op:'update',payload:{clock_out:new Date().toISOString()},match:{col:'id',val:o.id}});if(r.ok||r.queued)loadAll();}
+function patchOutboxClockOut(memberId,iso){const q=outbox();let done=false;for(const a of q){if(a.table==='time_entries'&&a.op==='insert'&&a.payload&&a.payload.member_id===memberId&&!a.payload.clock_out){a.payload.clock_out=iso;done=true;break;}}if(done)setOutbox(q);return done;}
+async function clockIn(){
+ if(myOpenShift()){toast("You're already clocked in");return;}
+ const sel=$('cjob');const jid=sel&&sel.value;if(!jid){toast('Pick a job');return;}
+ const tmp={id:'tmp'+Date.now(),member_id:ME.id,job_id:jid,clock_in:new Date().toISOString(),clock_out:null};
+ D.time.unshift(tmp);renderSafe();cacheD();
+ const r=await mutate({table:'time_entries',op:'insert',payload:{member_id:ME.id,job_id:jid}});
+ if(r.error){D.time=D.time.filter(x=>x.id!==tmp.id);renderSafe();}
+ else if(r.ok)loadAll();           // online: replace temp with real row
+ else if(r.queued)toast('Clocked in (will sync)','ok');
+}
+async function clockOut(){
+ const o=myOpenShift();if(!o)return;const iso=new Date().toISOString();
+ o.clock_out=iso;renderSafe();cacheD();
+ if(String(o.id).startsWith('tmp')){patchOutboxClockOut(ME.id,iso);updateNet();toast('Clocked out (will sync)','ok');return;}
+ const r=await mutate({table:'time_entries',op:'update',payload:{clock_out:iso},match:{col:'id',val:o.id}});
+ if(r.error){o.clock_out=null;renderSafe();}
+ else if(r.ok)loadAll();
+}
 function updateClock(){const o=ME&&D.time?myOpenShift():null;const c=$('clockchip');if(!c)return;if(o){c.textContent='On clock';c.classList.add('live');}else{c.textContent='Off';c.classList.remove('live');}}
 
 /* ---------- ADMIN DASHBOARD ---------- */
@@ -544,7 +561,13 @@ function vEmpFile(id){
  let h=`<button class="btn ghost sm" style="margin-bottom:10px" onclick="go('dash')">‹ Back</button>`;
  h+=`<div class="row" style="gap:12px;margin-bottom:6px"><div style="width:48px;height:48px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:18px">${initials(m.name)}</div><div><div class="h1" style="font-size:22px">${esc(m.name)}</div><div class="muted tiny">${m.role==='admin'?'Admin':'Employee'} · onboarding ${done}/${n}${done===n?' ✓':''}</div></div></div>`;
  h+=`<div class="row" style="gap:8px;margin:10px 0 16px"><div class="stat"><div class="n">${wk.toFixed(1)}</div><div class="l">Hours this week</div></div><div class="stat"><div class="n">${all.toFixed(1)}</div><div class="l">Hours all-time</div></div></div>`;
- h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;margin:6px 2px 8px">Documents & forms</div>`;
+ // time & shifts (admin can fix payroll)
+ h+=`<div class="row" style="justify-content:space-between;margin:6px 2px 8px"><div style="font-weight:800;font-size:13px;text-transform:uppercase">Time & shifts</div><button class="btn ghost sm" onclick="addShift('${id}')">＋ Add shift</button></div>`;
+ const shifts=D.time.filter(t=>t.member_id===id).sort((a,b)=>new Date(b.clock_in)-new Date(a.clock_in)).slice(0,40);
+ if(!shifts.length)h+=`<div class="muted tiny" style="padding:2px 2px 10px">No shifts logged yet.</div>`;
+ shifts.forEach(t=>{const j=D.jobs.find(x=>x.id===t.job_id);const open=!t.clock_out;
+  h+=`<div class="card tap" style="padding:11px 13px;margin-bottom:8px" onclick="editShift('${t.id}')"><div class="row" style="justify-content:space-between"><div style="min-width:0"><div style="font-weight:600;font-size:14px">${fmtD(t.clock_in)}</div><div class="muted tiny">${j?esc(j.title):'—'}</div></div><div style="text-align:right"><div style="font-size:14px">${fmtT(t.clock_in)} → ${open?'<span style="color:var(--amber);font-weight:700">still open</span>':fmtT(t.clock_out)}</div><div class="muted tiny">${open?'tap to fix ›':shiftHours(t).toFixed(2)+' h · edit ›'}</div></div></div></div>`;});
+ h+=`<div style="font-weight:800;font-size:13px;text-transform:uppercase;margin:16px 2px 8px">Documents & forms</div>`;
  ONB.forEach(o=>{const rec=D.onb.find(x=>x.member_id===id&&x.item===o.k);const url=signedUrls[o.k];const isImg=rec&&rec.file_url&&/\.(jpg|jpeg|png|gif|webp|heic)$/i.test(rec.file_url);
   h+=`<div class="card"><div class="row" style="align-items:flex-start;gap:12px"><div style="font-size:26px;line-height:1">${o.i}</div><div style="flex:1;min-width:0"><b>${o.t}</b>`;
   if(rec){h+=` <span class="badge b-active">✓ uploaded</span>${rec.updated_at?`<div class="muted tiny" style="margin-top:3px">Uploaded ${fmtD(rec.updated_at)}</div>`:''}`;
@@ -555,6 +578,32 @@ function vEmpFile(id){
  if(id!==ME.id)h+=`<button class="btn ghost" style="margin-top:6px" onclick="manageMember('${id}')">⚙ Manage (reset PIN · role · remove)</button>`;
  return h;
 }
+/* ---------- ADMIN: fix/add shifts (payroll) ---------- */
+function toLocalInput(d){if(!d)return '';const dt=new Date(d);return new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,16);}
+function editShift(id){const t=D.time.find(x=>x.id===id);if(!t)return;if(String(id).startsWith('tmp')){toast('This shift is still syncing — try again in a moment');return;}
+ const jobOpts=D.jobs.map(j=>`<option value="${j.id}" ${j.id===t.job_id?'selected':''}>${esc(j.title)}</option>`).join('');
+ sheet(`<h3>Edit shift</h3><p class="muted tiny">${esc(memberName(t.member_id))}</p>
+  <div class="field"><label>Job</label><select id="sfjob">${jobOpts||'<option value="">—</option>'}</select></div>
+  <div class="field"><label>Clock in</label><input type="datetime-local" id="sfin" value="${toLocalInput(t.clock_in)}"></div>
+  <div class="field"><label>Clock out</label><input type="datetime-local" id="sfout" value="${toLocalInput(t.clock_out)}"></div>
+  <button class="btn acc" onclick="saveShift('${id}')">Save</button>
+  <button class="btn red" style="margin-top:8px" onclick="delShift('${id}')">Delete shift</button>`);}
+async function saveShift(id){const inV=$('sfin').value,outV=$('sfout').value;if(!inV){toast('Set a clock-in time','err');return;}
+ const ci=new Date(inV).toISOString(),co=outV?new Date(outV).toISOString():null;
+ if(co&&new Date(co)<new Date(ci)){toast('Clock-out is before clock-in','err');return;}
+ closeSheet();const {error}=await sb.from('time_entries').update({job_id:$('sfjob').value||null,clock_in:ci,clock_out:co}).eq('id',id);
+ if(error){toast(error.message,'err');return;}toast('Shift updated','ok');loadAll();}
+async function delShift(id){if(!confirm('Delete this shift? This removes its hours.'))return;closeSheet();const {error}=await sb.from('time_entries').delete().eq('id',id);if(error){toast(error.message,'err');return;}toast('Shift deleted','ok');loadAll();}
+function addShift(mid){const jobOpts=D.jobs.map(j=>`<option value="${j.id}">${esc(j.title)}</option>`).join('');const now=toLocalInput(new Date().toISOString());
+ sheet(`<h3>Add shift</h3><p class="muted tiny">Manually log hours for ${esc(memberName(mid))}.</p>
+  <div class="field"><label>Job</label><select id="asjob">${jobOpts||'<option value="">—</option>'}</select></div>
+  <div class="field"><label>Clock in</label><input type="datetime-local" id="asin" value="${now}"></div>
+  <div class="field"><label>Clock out</label><input type="datetime-local" id="asout" value="${now}"></div>
+  <button class="btn acc" onclick="saveAddShift('${mid}')">Add shift</button>`);}
+async function saveAddShift(mid){const inV=$('asin').value,outV=$('asout').value;if(!inV||!outV){toast('Set both times','err');return;}
+ if(new Date(outV)<new Date(inV)){toast('Clock-out is before clock-in','err');return;}
+ closeSheet();const {error}=await sb.from('time_entries').insert({member_id:mid,job_id:$('asjob').value||null,clock_in:new Date(inV).toISOString(),clock_out:new Date(outV).toISOString()});
+ if(error){toast(error.message,'err');return;}toast('Shift added','ok');loadAll();}
 
 /* ---------- CREW ---------- */
 function vCrew(){
@@ -622,6 +671,9 @@ function maybeTour(){if(ME&&!localStorage.getItem('ccm_tour_'+ME.id))setTimeout(
 
 /* ---------- BOOT ---------- */
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+// keep data fresh when the app is reopened / phone wakes / regains connection
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ME&&navigator.onLine){flush();loadAll({preserve:true});}});
+window.addEventListener('focus',()=>{if(ME&&navigator.onLine)loadAll({preserve:true});});
 updateNet();
 (async function(){
  try{const {data:{session}}=await sb.auth.getSession();if(session){await afterLogin();}else{showLogin();}}
