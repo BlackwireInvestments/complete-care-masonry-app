@@ -1,5 +1,5 @@
 /* Complete Care Masonry — service worker (app-shell offline) */
-const C = 'ccm-v5';
+const C = 'ccm-v6';
 
 // Tapping a notification focuses (or opens) the app
 self.addEventListener('notificationclick', e => {
