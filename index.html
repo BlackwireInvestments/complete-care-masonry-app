@@ -294,6 +294,8 @@ async function loadAll(opt={}){
    sb.from('estimates').select('*').order('due_date'),
   ]);
   D={jobs:jobs.data||[],tasks:tasks.data||[],comps:comps.data||[],time:time.data||[],msgs:msgs.data||[],members:crew.data||[],onb:onb.data||[],crews:crews.data||[],estimates:estimates.data||[]};
+  // keep ME fresh so crew/role changes by the admin show up live (no re-login needed)
+  if(ME){const mine=(D.members||[]).find(x=>x.id===ME.id);if(mine){ME.crew_id=mine.crew_id||null;ME.role=mine.role;try{localStorage.setItem('ccm_me',JSON.stringify(ME));}catch(e){}const nd=$('navdash');if(nd)nd.style.display=isAdmin()?'flex':'none';}}
   cacheD();
  }catch(e){restoreD();}
  preserve?renderSafe():render();updateClock();updateNet();
