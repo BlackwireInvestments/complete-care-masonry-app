@@ -14,7 +14,7 @@
 <link rel="icon" href="favicon-64.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--slate:#0d0d0d;--slate2:#1f1f1f;--bg:#eef0f2;--card:#fff;--line:#e0e3e7;--line2:#cdd2d8;
  --txt:#15171a;--mut:#6b7178;--mut2:#9aa0a6;--accent:#e85a00;--green:#1aa863;--greenbg:#e4f6ec;--amber:#e0871f;--red:#df4b3a;--redbg:#fbe6e3;
@@ -27,7 +27,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 input,textarea,select{font-family:inherit;font-size:16px}
 .muted{color:var(--mut)}.tiny{font-size:12px}
 .appbar{background:var(--slate);color:#fff;padding:calc(env(safe-area-inset-top) + 14px) 16px 14px;display:flex;align-items:center;gap:12px;flex-shrink:0;z-index:20}
-.wm{font-weight:800;font-size:15px;letter-spacing:.01em}.wm .o{color:var(--accent)}
+.wm{font-family:'Oswald','Inter',sans-serif;font-weight:700;font-size:18px;letter-spacing:.03em;text-transform:uppercase}.wm .o{color:var(--accent)}
 .appbar .sp{flex:1}
 .chip{font-size:11px;font-weight:700;padding:5px 9px;border-radius:99px;background:#2a2a2a;color:#fff}
 .chip.live{background:var(--green)}
@@ -85,7 +85,7 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .sheetcard h3{font-size:19px;font-weight:800;margin-bottom:4px}
 #login{position:fixed;inset:0;background:#080808;color:#fff;z-index:80;display:none;flex-direction:column;justify-content:center;padding:30px 24px calc(30px + env(safe-area-inset-bottom));max-width:540px;margin:0 auto;overflow-y:auto}
 #login.on{display:flex}
-#login .lwm{font-weight:800;font-size:24px;text-align:center}.lwm .o{color:var(--accent)}
+#login .lwm{font-family:'Oswald','Inter',sans-serif;font-weight:700;font-size:32px;letter-spacing:.04em;text-transform:uppercase;text-align:center}.lwm .o{color:var(--accent)}
 #login .ltag{text-align:center;color:#9aa0a6;font-size:13px;margin:6px 0 26px}
 #login .field input{background:#151515;border:1.5px solid #2a2a2a;color:#fff}
 #login .note{text-align:center;color:#6a6a6a;font-size:12px;margin-top:18px;line-height:1.5}
