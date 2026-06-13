@@ -50,8 +50,11 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .btn.sm{padding:10px 14px;font-size:13px;width:auto}
 .fab{position:absolute;right:16px;bottom:78px;width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;font-size:28px;display:grid;place-items:center;box-shadow:0 6px 20px rgba(232,90,0,.4);z-index:25}
 .nav{position:absolute;left:0;right:0;bottom:0;height:calc(64px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#fff;border-top:1px solid var(--line);display:flex;z-index:24;max-width:540px;margin:0 auto}
-.nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--mut2);font-size:10.5px;font-weight:600}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--mut2);font-size:10.5px;font-weight:600;position:relative}
 .nav button.on{color:var(--accent)}.nav .ic{font-size:22px;line-height:1}
+.navdot{position:absolute;top:7px;right:50%;margin-right:-15px;width:9px;height:9px;border-radius:50%;background:var(--red);border:1.5px solid #fff}
+.notifbar{background:#10243a;color:#cfe3ff;font-size:12px;font-weight:600;display:none;align-items:center;gap:8px;padding:7px 10px;flex-shrink:0}
+.notifbar.on{display:flex}.notifbar span{flex:1;cursor:pointer}.notifbar button{color:#7fa8cf;font-size:15px;padding:0 4px}
 .step{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:9px;display:flex;gap:12px;align-items:flex-start}
 .step.done{background:#f6faf7;border-color:#cfe9da}
 .chk{width:28px;height:28px;border-radius:8px;border:2px solid var(--line2);flex:0 0 28px;display:grid;place-items:center;font-size:16px;color:#fff;cursor:pointer}
@@ -129,6 +132,7 @@ input,textarea,select{font-family:inherit;font-size:16px}
     <button class="rolepill" onclick="logout()"><span class="av" id="meav">?</span><span id="mename">—</span></button>
   </div>
   <div class="netbar" id="netbar"></div>
+  <div class="notifbar" id="notifbar"><span onclick="enableNotify()">🔔 Turn on alerts so you don’t miss jobs &amp; messages — tap to enable</span><button onclick="dismissNotifBar()">✕</button></div>
   <div class="screen" id="screen"><div class="empty">Loading…</div></div>
   <button class="fab" id="fab" style="display:none" onclick="onFab()">＋</button>
   <div class="nav" id="nav" style="display:none">
@@ -296,13 +300,46 @@ async function loadAll(opt={}){
 }
 let subbed=false,rtT=null;
 function subscribe(){if(subbed)return;subbed=true;
- sb.channel('ccm').on('postgres_changes',{event:'*',schema:'public'},()=>{clearTimeout(rtT);rtT=setTimeout(()=>loadAll({preserve:true}),350);}).subscribe();}
+ sb.channel('ccm').on('postgres_changes',{event:'*',schema:'public'},(payload)=>{handleRealtime(payload);clearTimeout(rtT);rtT=setTimeout(()=>loadAll({preserve:true}),350);}).subscribe();}
+
+/* ---------- NOTIFICATIONS ---------- */
+const notifOK=()=>('Notification'in window)&&Notification.permission==='granted';
+function enableNotify(){if(!('Notification'in window)){toast('Alerts aren’t supported in this browser','err');localStorage.setItem('ccm_notifdismiss','1');updateNotifBar();return;}Notification.requestPermission().then(p=>{localStorage.setItem('ccm_notifdismiss','1');toast(p==='granted'?'🔔 Alerts are on':'Alerts blocked — turn them on in your browser settings',p==='granted'?'ok':'err');updateNotifBar();});}
+function dismissNotifBar(){localStorage.setItem('ccm_notifdismiss','1');updateNotifBar();}
+function updateNotifBar(){const b=$('notifbar');if(!b)return;const show=ME&&('Notification'in window)&&Notification.permission==='default'&&!localStorage.getItem('ccm_notifdismiss');b.classList.toggle('on',!!show);}
+function pushNote(title,body,tag){if(!notifOK())return;try{if(navigator.serviceWorker&&navigator.serviceWorker.ready){navigator.serviceWorker.ready.then(reg=>reg.showNotification(title,{body:body||'',tag:tag||'ccm',icon:'icon-192.png',badge:'icon-192.png'})).catch(()=>{});}else{new Notification(title,{body:body||'',icon:'icon-192.png'});}}catch(e){}}
+function handleRealtime(p){
+ try{
+  if(!ME||!p||p.eventType!=='INSERT')return;
+  const t=p.table,n=p.new;if(!n)return;
+  const away=document.hidden;
+  if(t==='messages'&&n.member_id!==ME.id){
+   const who=memberName(n.member_id);const flag=(n.body||'').startsWith('⚑');
+   if(flag){if(isAdmin()){const txt=(n.body||'').replace('⚑ ISSUE — ','');away?pushNote('⚑ Issue flagged',txt,'flag'):toast('⚑ Issue flagged','err');}}
+   else{const title='New message'+(who&&who!=='—'?(' · '+who):'');away?pushNote(title,n.body,'msg'):toast(title);}
+  }else if(t==='jobs'&&!isAdmin()){
+   away?pushNote('New job scheduled',n.title||'Tap to view','job'):toast('New job: '+(n.title||''));
+  }
+ }catch(e){}
+}
+
+/* ---------- UNREAD BADGES ---------- */
+const seenKey=k=>'ccm_seen_'+(ME?ME.id:'x')+'_'+k;
+const getSeen=k=>Number(localStorage.getItem(seenKey(k))||0);
+const setSeen=k=>localStorage.setItem(seenKey(k),Date.now());
+function navDot(s,on){const b=document.querySelector('.nav [data-s="'+s+'"]');if(!b)return;let d=b.querySelector('.navdot');if(on){if(!d){d=document.createElement('span');d.className='navdot';b.appendChild(d);}}else if(d)d.remove();}
+function updateBadges(){if(!ME)return;
+ const chatNew=D.msgs.some(m=>!m.job_id&&m.member_id!==ME.id&&new Date(m.created_at).getTime()>getSeen('chat'));
+ navDot('chat',chatNew);
+ if(isAdmin()){const issueNew=D.msgs.some(m=>(m.body||'').startsWith('⚑')&&new Date(m.created_at).getTime()>getSeen('issues'));navDot('dash',issueNew);}
+ else{const jobNew=myJobs().some(j=>new Date(j.created_at).getTime()>getSeen('jobs'));navDot('calendar',jobNew);navDot('jobs',jobNew);}
+}
 const memberName=id=>{const m=D.members.find(x=>x.id===id);return m?m.name:'—';};
 const compFor=tid=>D.comps.find(c=>c.task_id===tid);
 const myOpenShift=()=>D.time.find(t=>t.member_id===ME.id&&!t.clock_out);
 
 /* ---------- ROUTER / RENDER ---------- */
-function go(s){if(cur==='chat'&&s!=='chat')clearChatbar();cur=s;curJob=null;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));render();$('screen').scrollTop=0;if(s==='chat')scrollChatBottom();}
+function go(s){if(cur==='chat'&&s!=='chat')clearChatbar();cur=s;curJob=null;if(s==='chat')setSeen('chat');if(s==='dash')setSeen('issues');if(s==='calendar'||s==='jobs')setSeen('jobs');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));render();$('screen').scrollTop=0;if(s==='chat')scrollChatBottom();}
 function openJob(id){if(cur==='chat')clearChatbar();if(cur==='calendar'||cur==='jobs')jobFrom=cur;cur='job';curJob=id;render();$('screen').scrollTop=0;}
 function fabState(){$('fab').style.display=((cur==='jobs'||cur==='crew')&&isAdmin())?'grid':'none';}
 function paint(){const el=$('screen');
@@ -317,13 +354,14 @@ function paint(){const el=$('screen');
  else if(cur==='onboard')el.innerHTML=vOnboard();
  else if(cur==='chat')el.innerHTML=vChat();
 }
-function render(){if(!ME)return;paint();fabState();updateClock();if(cur==='chat')scrollChatBottom();}
+function render(){if(!ME)return;paint();fabState();updateClock();updateBadges();updateNotifBar();if(cur==='chat')scrollChatBottom();}
 function renderSafe(){if(!ME)return;
  const a=document.activeElement,id=a&&a.id,v=a&&('value'in a)?a.value:null,s0=a&&a.selectionStart,s1=a&&a.selectionEnd;
  const sc=$('screen').scrollTop;
  paint();fabState();updateClock();
  if(id){const n=$(id);if(n){try{n.focus();if(v!=null&&('value'in n)){n.value=v;if(s0!=null&&n.setSelectionRange)n.setSelectionRange(s0,s1);}}catch(e){}}}
  $('screen').scrollTop=sc;
+ updateBadges();
  if(cur==='chat'&&!id)scrollChatBottom();
 }
 function scrollChatBottom(){setTimeout(()=>{const c=$('screen');if(c)c.scrollTop=c.scrollHeight;},30);}

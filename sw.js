@@ -1,5 +1,14 @@
 /* Complete Care Masonry — service worker (app-shell offline) */
-const C = 'ccm-v3';
+const C = 'ccm-v4';
+
+// Tapping a notification focuses (or opens) the app
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const c of list) { if ('focus' in c) return c.focus(); }
+    if (self.clients.openWindow) return self.clients.openWindow('./');
+  }));
+});
 const SHELL = [
   './', './index.html', './manifest.json',
   './icon-192.png', './icon-512.png',
